@@ -30,6 +30,12 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundColor": "#ffffff"
+      },
+      "package": "com.mharis7y.hushtalk"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "03ff9bd6-1dd2-492c-ab17-d7d0dccc14b3"
       }
     }
   }

@@ -6,7 +6,7 @@ const TabIcon = ({ name, color, label }) => (
   <View className="items-center justify-center gap-1">
     <Ionicons name={name} size={22} color={color} />
     <Text
-      className={`text-xs font-poppins_medium ${
+      className={`text-[10px] whitespace-nowrap font-poppins ${
         color === '#FF9C01' ? 'text-secondary' : 'text-white/60'
       }`}
     >
@@ -24,8 +24,8 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: '#1E1E2D',
           borderTopColor: '#232533',
-          height: 70,
-          paddingTop: 1,
+          height: 80,
+          paddingTop: 8,
         
         },
         tabBarActiveTintColor: '#FF9C01',

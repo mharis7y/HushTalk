@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Image, ScrollView, Text, View } from 'react-native';
+import { KeyboardAvoidingView,Image, ScrollView, Text, View } from 'react-native';
 import AppInput from '../../components/AppInput';
 import AppButton from '../../components/AppButton';
 import { userProfile } from '../../constants/dummy';
@@ -13,7 +13,8 @@ export default function ProfileScreen() {
   });
 
   return (
-    <ScrollView className="flex-1 bg-primary px-6 pt-16">
+    <KeyboardAvoidingView behavior="padding" className="flex-1 bg-primary px-6 pt-10">
+    <ScrollView keyboardDismissMode="on-drag">
       <View className="items-center mb-8">
         <Image
           source={{ uri: userProfile.avatar }}
@@ -64,7 +65,7 @@ export default function ProfileScreen() {
         <AppButton title="Update Password" variant="secondary" />
       </View>
 
-      <View className="mt-12 mb-10">
+      <View className="mt-12 mb-10 ">
         <AppButton
           title="Log Out"
           variant="ghost"
@@ -72,6 +73,7 @@ export default function ProfileScreen() {
         />
       </View>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
