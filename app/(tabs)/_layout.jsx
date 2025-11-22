@@ -1,4 +1,5 @@
-import { Tabs } from 'expo-router';
+import { Redirect,Tabs } from 'expo-router';
+import { useGlobalContext } from '../../context/GlobalProvider';
 import { Ionicons } from '@expo/vector-icons';
 import { View, Text } from 'react-native';
 
@@ -16,6 +17,9 @@ const TabIcon = ({ name, color, label }) => (
 );
 
 export default function TabsLayout() {
+  const { loading, isLogged } = useGlobalContext();
+
+  if (!loading && !isLogged) return <Redirect href="/login" />;
   return (
     <Tabs
       screenOptions={{

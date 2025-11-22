@@ -1,6 +1,6 @@
 import { ActivityIndicator, Modal, View } from 'react-native';
 
-export default function Loader({ overlay = false }) {
+function Loader({ overlay = false }) {
   if (overlay) {
     return (
       <Modal transparent animationType="fade">
@@ -17,5 +17,9 @@ export default function Loader({ overlay = false }) {
     </View>
   );
 }
+
+Loader.displayName = 'Loader';
+
+export default Loader;
 
 

@@ -2,32 +2,40 @@ import { useState } from "react";
 import { Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { View, Text, ScrollView, Dimensions, Alert, Image } from "react-native";
-
+import { useGlobalContext } from "../../context/GlobalProvider";
+import { signIn } from "../../lib/firebase";
 import CustomButton from "../../components/CustomButton";
 import FormField from "../../components/FormField";
 
 const login = () => {
-  
   const [isSubmitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
 
-  // 🔥 FRONTEND-ONLY SIGN-IN (NO AUTH)
-  const submit = () => {
+  const submit = async () => {
     if (form.email === "" || form.password === "") {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
+
     setSubmitting(true);
-
-    
-
-    // Navigate to Home
-    router.replace("/home");
-
-    setSubmitting(false);
+    try {
+      const result = await signIn(form.email, form.password);
+      if (result.success) {
+        // User will be automatically set by onAuthStateChanged in GlobalProvider
+        router.replace("/home");
+      } else if (result.message== '(auth/invalid-credential).') {
+        Alert.alert("Error", 'Invalid Credentials' );
+      } else {
+        Alert.alert("Error", 'Invalid Email' );
+      }
+    } catch (error) {
+      Alert.alert("Error", error.message || "An unexpected error occurred");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useGlobalContext } from "../../context/GlobalProvider";
+import { createUser } from "../../lib/firebase";
 import { View, Text, ScrollView, Dimensions, Alert, Image } from "react-native";
-
+import { KeyboardAvoidingView } from "react-native";
 import CustomButton from "../../components/CustomButton";
 import FormField from "../../components/FormField";
 
 const SignUp = () => {
-  
-
   const [isSubmitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     username: "",
@@ -17,20 +17,34 @@ const SignUp = () => {
   });
 
   const submit = async () => {
-    if (form.email === "" || form.password === ""|| form.username === "") {
+    if (form.username === "" || form.email === "" || form.password === "") {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
-    setSubmitting(true);
-    
 
-      router.replace("/home");
-    
+    if (form.password.length < 6) {
+      Alert.alert("Error", "Password must be at least 6 characters");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const result = await createUser(form.email, form.password, form.username);
+      if (result.success) {
+        // User will be automatically set by onAuthStateChanged in GlobalProvider
+        router.replace("/home");
+      } else {
+        Alert.alert("Error", result.msg || "Failed to create account");
+      }
+    } catch (error) {
+      Alert.alert("Error", error.message || "An unexpected error occurred");
+    } finally {
       setSubmitting(false);
-    
+    }
   };
 
   return (
+    <KeyboardAvoidingView>
     <SafeAreaView className="bg-primary h-full">
       <ScrollView keyboardDismissMode="on-drag">
         <View
@@ -88,6 +102,7 @@ const SignUp = () => {
         </View>
       </ScrollView>
     </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 };
 

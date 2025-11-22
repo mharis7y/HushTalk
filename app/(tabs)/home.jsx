@@ -3,13 +3,14 @@ import { router } from 'expo-router';
 import Header from '../../components/Header';
 import AppButton from '../../components/AppButton';
 import { recentChats, userProfile } from '../../constants/dummy';
-
+import { useGlobalContext } from '../../context/GlobalProvider';
 export default function HomeScreen() {
+    const { user } = useGlobalContext();
   return (
     <View className="flex-1 bg-primary px-6 pt-16">
       <Header
         subtitle="Welcome Back"
-        title={userProfile.username}
+        title={user?.displayName}
         rightSlot={
           <View className="h-12 w-12 rounded-2xl bg-black-200 items-center justify-center">
             <Text className="text-white font-poppins_bold">PK</Text>

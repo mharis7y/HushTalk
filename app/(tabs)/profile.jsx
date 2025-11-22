@@ -1,16 +1,44 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView,Image, ScrollView, Text, View } from 'react-native';
+import { KeyboardAvoidingView,Image, ScrollView, Text, View, Alert } from 'react-native';
 import AppInput from '../../components/AppInput';
 import AppButton from '../../components/AppButton';
 import { userProfile } from '../../constants/dummy';
 import { router } from 'expo-router';
+import { signOut } from '../../lib/firebase';
+import { useGlobalContext } from '../../context/GlobalProvider';
 
 export default function ProfileScreen() {
-  const [username, setUsername] = useState(userProfile.username);
+  const { user } = useGlobalContext();
+  const [username, setUsername] = useState(user.displayName);
   const [passwords, setPasswords] = useState({
     current: '',
     newPass: '',
   });
+
+  const handleSignOut = async () => {
+    Alert.alert(
+      "Sign Out",
+      "Are you sure you want to sign out?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Sign Out",
+          style: "destructive",
+          onPress: async () => {
+            const result = await signOut();
+            if (result.success) {
+              router.replace("/login");
+            } else {
+              Alert.alert("Error", result.msg || "Failed to sign out");
+            }
+          }
+        }
+      ]
+    );
+  };
 
   return (
     <KeyboardAvoidingView behavior="padding" className="flex-1 bg-primary px-6 pt-10">
@@ -21,10 +49,10 @@ export default function ProfileScreen() {
           className="h-24 w-24 rounded-3xl mb-4"
         />
         <Text className="text-white text-3xl font-poppins_bold">
-          {userProfile.username}
+          {user.displayName}
         </Text>
         <Text className="text-white/60 font-poppins">
-          {userProfile.email}
+          {user.email}
         </Text>
       </View>
 
@@ -69,7 +97,7 @@ export default function ProfileScreen() {
         <AppButton
           title="Log Out"
           variant="ghost"
-          onPress={() => router.replace('/login')}
+          onPress={handleSignOut}
         />
       </View>
     </ScrollView>

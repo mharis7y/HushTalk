@@ -4,6 +4,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import GlobalProvider from "../context/GlobalProvider";
 import {
   useFonts,
   Poppins_100Thin,
@@ -45,14 +47,18 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView className="flex-1 bg-primary">
-      <StatusBar style="light" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: '#161622' },
-        }}
-      />
-    </GestureHandlerRootView>
+    <GlobalProvider>
+      <SafeAreaProvider>
+        <GestureHandlerRootView className="flex-1 bg-primary">
+          <StatusBar style="light" />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: '#161622' },
+            }}
+          />
+        </GestureHandlerRootView>
+      </SafeAreaProvider>
+    </GlobalProvider>
   );
 }
