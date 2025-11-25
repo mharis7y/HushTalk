@@ -1,40 +1,17 @@
 import { useState } from 'react';
 import { Stack } from 'expo-router';
-import { ScrollView, Text, View, Image, Alert, Pressable } from 'react-native';
+import { ScrollView, Text, View, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Image as ImageIcon, Lock, Upload, Unlock } from 'lucide-react-native';
+import { Video, Unlock } from 'lucide-react-native';
 import AppButton from '../../components/AppButton';
 import AppInput from '../../components/AppInput';
 import { decodeMessage } from '../../lib/steganography';
 
-export default function ExtractMessageScreen() {
-  const [selectedMedia, setSelectedMedia] = useState(null);
+export default function ExtractVideoScreen() {
+  const [selectedVideo, setSelectedVideo] = useState(null);
   const [password, setPassword] = useState('');
   const [decoded, setDecoded] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const pickImage = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Please grant permission to access your media library.');
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        quality: 1,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        setSelectedMedia(result.assets[0]);
-        setDecoded(''); // Clear previous result
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to pick image: ' + error.message);
-    }
-  };
 
   const pickVideo = async () => {
     try {
@@ -51,7 +28,7 @@ export default function ExtractMessageScreen() {
       });
 
       if (!result.canceled && result.assets[0]) {
-        setSelectedMedia(result.assets[0]);
+        setSelectedVideo(result.assets[0]);
         setDecoded(''); // Clear previous result
       }
     } catch (error) {
@@ -60,15 +37,15 @@ export default function ExtractMessageScreen() {
   };
 
   const handleDecode = async () => {
-    if (!selectedMedia) {
-      Alert.alert('Error', 'Please select an image or video.');
+    if (!selectedVideo) {
+      Alert.alert('Error', 'Please select a video.');
       return;
     }
 
     try {
       setLoading(true);
       const result = await decodeMessage({ 
-        carrier: selectedMedia.uri,
+        carrier: selectedVideo.uri,
         password: password.trim() || undefined 
       });
       setDecoded(result);
@@ -87,49 +64,37 @@ export default function ExtractMessageScreen() {
           headerShown: true,
           headerStyle: { backgroundColor: '#161622' },
           headerTintColor: '#FFFFFF',
-          title: 'Extract Message'
+          title: 'Extract Message from Video'
         }}
       />
       <View className="flex-row items-center gap-2 mb-2">
         <Unlock size={28} color="#FF9C01" />
         <Text className="text-3xl text-white font-poppins_bold">
-          Extract Message
+          Extract Message from Video
         </Text>
       </View>
       <Text className="text-white/70 mb-6 font-poppins">
-        Reveal hidden payloads directly on-device.
+        Reveal hidden payloads from videos directly on-device.
       </Text>
 
       <View className="gap-5">
         <View>
           <Text className="text-white font-poppins_medium mb-2">
-            Select Media
+            Select Video
           </Text>
-          <View className="flex-row gap-3">
-            <AppButton
-              title="Choose Image"
-              variant="secondary"
-              className="flex-1"
-              icon={<ImageIcon size={18} color="#FFFFFF" />}
-              onPress={pickImage}
-            />
-            <AppButton
-              title="Choose Video"
-              variant="secondary"
-              className="flex-1"
-              icon={<Upload size={18} color="#FFFFFF" />}
-              onPress={pickVideo}
-            />
-          </View>
-          {selectedMedia && (
+          <AppButton
+            title="Choose Video"
+            variant="secondary"
+            icon={<Video size={18} color="#FFFFFF" />}
+            onPress={pickVideo}
+          />
+          {selectedVideo && (
             <View className="mt-3">
-              <Image
-                source={{ uri: selectedMedia.uri }}
-                className="w-full h-48 rounded-2xl"
-                resizeMode="cover"
-              />
+              <View className="w-full h-48 bg-black-200 rounded-2xl items-center justify-center">
+                <Video size={48} color="#FF9C01" />
+              </View>
               <Text className="text-white/60 text-sm mt-2 font-poppins">
-                {selectedMedia.type === 'video' ? 'Video' : 'Image'} selected
+                Video selected
               </Text>
             </View>
           )}
@@ -163,5 +128,4 @@ export default function ExtractMessageScreen() {
     </ScrollView>
   );
 }
-
 

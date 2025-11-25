@@ -5,6 +5,7 @@ import { useGlobalContext } from "../../context/GlobalProvider";
 import { createUser } from "../../lib/firebase";
 import { View, Text, ScrollView, Dimensions, Alert, Image } from "react-native";
 import { KeyboardAvoidingView } from "react-native";
+import { Lock, Mail, Key, User } from "lucide-react-native";
 import CustomButton from "../../components/CustomButton";
 import FormField from "../../components/FormField";
 
@@ -44,8 +45,7 @@ const SignUp = () => {
   };
 
   return (
-    <KeyboardAvoidingView>
-    <SafeAreaView className="bg-primary h-full">
+    <KeyboardAvoidingView behavior="padding" className="bg-primary h-full">
       <ScrollView keyboardDismissMode="on-drag">
         <View
           className="w-full flex justify-center h-full px-4 my-6"
@@ -53,11 +53,12 @@ const SignUp = () => {
             minHeight: Dimensions.get("window").height - 100,
           }}
         >
-          
-
-          <Text className="text-2xl font-semibold text-white mt-10 font-poppins_semibold text-center">
-            Sign Up to Aora
-          </Text>
+          <View className="items-center mt-10 mb-6">
+            <Lock size={48} color="#FF9C01" />
+            <Text className="text-2xl font-semibold text-white mt-4 font-poppins_semibold text-center">
+              Sign Up to HushTalk
+            </Text>
+          </View>
 
           <FormField
             title="Username"
@@ -101,7 +102,7 @@ const SignUp = () => {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    
     </KeyboardAvoidingView>
   );
 };

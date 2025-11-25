@@ -7,12 +7,13 @@ import {
   Text,
   View,
   Image,
+  Alert,
 } from "react-native";
+import Toast from 'react-native-toast-message';
 import { router } from "expo-router";
-import { vaultItems } from "../../constants/dummy";
+import { vaultItems as initialVaultItems } from "../../constants/dummy";
 import AppButton from "../../components/AppButton";
-import { LinearGradient } from "expo-linear-gradient";
-import { Entypo, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Download, Trash2, Image as ImageIcon, Lock } from "lucide-react-native";
 
 const dialogOptions = [
   { label: "Image", id: "image" },
@@ -21,12 +22,45 @@ const dialogOptions = [
 
 export default function VaultScreen() {
   const [dialog, setDialog] = useState(null);
+  const [vaultItems, setVaultItems] = useState(initialVaultItems);
 
   const openDialog = (mode) => setDialog(mode);
 
   const handleSelection = (medium) => {
     setDialog(null);
-    router.push(`/stegano/${dialog === "hide" ? "hide" : "extract"}`);
+    const basePath = dialog === "hide" ? "hide" : "extract";
+    const mediaType = medium === "image" ? "image" : "video";
+    router.push(`/stegano/${basePath}-${mediaType}`);
+  };
+
+  const handleDownload = (item) => {
+    Toast.show({
+      type: 'success',
+      text1: 'Image Download',
+      text2: 'Image saved to gallery!',
+      position: 'bottom',
+    });
+  };
+
+  const handleDelete = (itemId) => {
+    Alert.alert(
+      'Delete Item',
+      'Are you sure you want to delete this item?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            setVaultItems((prev) => prev.filter((item) => item.id !== itemId));
+            Alert.alert('Success', 'Item deleted successfully!');
+          },
+        },
+      ]
+    );
   };
 
   const renderItem = ({ item }) => (
@@ -53,19 +87,21 @@ export default function VaultScreen() {
 
         {/* Button Row */}
         <View className="flex-row mt-3 items-center">
-          <Pressable className="flex-row items-center mr-6">
-            <Entypo name="download" size={16} color="#FF9C01" />
+          <Pressable 
+            className="flex-row items-center mr-6"
+            onPress={() => handleDownload(item)}
+          >
+            <Download size={16} color="#FF9C01" />
             <Text className="text-[#FF9C01] ml-2 font-poppins_medium">
               Download
             </Text>
           </Pressable>
 
-          <Pressable className="flex-row items-center">
-            <MaterialCommunityIcons
-              name="trash-can-outline"
-              size={16}
-              color="#FF4C4C"
-            />
+          <Pressable 
+            className="flex-row items-center"
+            onPress={() => handleDelete(item.id)}
+          >
+            <Trash2 size={16} color="#FF4C4C" />
             <Text className="text-[#FF4C4C] ml-2 font-poppins_medium">
               Delete
             </Text>
@@ -78,9 +114,12 @@ export default function VaultScreen() {
   return (
     <View className="flex-1 bg-primary px-6 pt-16">
       {/* Title */}
-      <Text className="text-3xl text-white font-poppins_bold mb-6">
-        Vault
-      </Text>
+      <View className="flex-row items-center gap-2 mb-6">
+        <Lock size={28} color="#FF9C01" />
+        <Text className="text-3xl text-white font-poppins_bold">
+          Vault
+        </Text>
+      </View>
 
       {/* Top Card (Primary background with Secondary buttons) */}
 <View className="bg-primary border border-white/10 rounded-2xl p-6 mb-8">
@@ -90,6 +129,7 @@ export default function VaultScreen() {
     <AppButton
       title="Hide Message"
       className="flex-1"
+      icon={<ImageIcon size={18} color="#FFFFFF" />}
       onPress={() => openDialog('hide')}
     />
 
@@ -97,6 +137,7 @@ export default function VaultScreen() {
       title="Extract Message"
       variant="secondary"
       className="flex-1"
+      icon={<Lock size={18} color="#FFFFFF" />}
       onPress={() => openDialog('extract')}
     />
   </View>

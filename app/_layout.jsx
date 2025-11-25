@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 import GlobalProvider from "../context/GlobalProvider";
 import {
   useFonts,
@@ -57,6 +58,7 @@ export default function RootLayout() {
               contentStyle: { backgroundColor: '#161622' },
             }}
           />
+          <Toast />
         </GestureHandlerRootView>
       </SafeAreaProvider>
     </GlobalProvider>

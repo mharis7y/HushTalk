@@ -1,40 +1,18 @@
 import { useState } from 'react';
 import { Stack } from 'expo-router';
-import { ScrollView, Text, TextInput, View, Image, Alert, Pressable } from 'react-native';
+import { ScrollView, Text, View, Image, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Image as ImageIcon, Lock, Upload } from 'lucide-react-native';
+import { Video, Lock } from 'lucide-react-native';
 import AppButton from '../../components/AppButton';
 import AppInput from '../../components/AppInput';
 import { encodeMessage } from '../../lib/steganography';
 
-export default function HideMessageScreen() {
+export default function HideVideoScreen() {
   const [secret, setSecret] = useState('');
-  const [selectedMedia, setSelectedMedia] = useState(null);
+  const [selectedVideo, setSelectedVideo] = useState(null);
   const [password, setPassword] = useState('');
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const pickImage = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Please grant permission to access your media library.');
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        quality: 1,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        setSelectedMedia(result.assets[0]);
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to pick image: ' + error.message);
-    }
-  };
 
   const pickVideo = async () => {
     try {
@@ -51,7 +29,7 @@ export default function HideMessageScreen() {
       });
 
       if (!result.canceled && result.assets[0]) {
-        setSelectedMedia(result.assets[0]);
+        setSelectedVideo(result.assets[0]);
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to pick video: ' + error.message);
@@ -59,8 +37,8 @@ export default function HideMessageScreen() {
   };
 
   const handleEncode = async () => {
-    if (!selectedMedia) {
-      Alert.alert('Error', 'Please select an image or video.');
+    if (!selectedVideo) {
+      Alert.alert('Error', 'Please select a video.');
       return;
     }
     if (!secret.trim()) {
@@ -72,14 +50,14 @@ export default function HideMessageScreen() {
       setLoading(true);
       setStatus('Encoding...');
       const result = await encodeMessage({ 
-        carrier: selectedMedia.uri, 
+        carrier: selectedVideo.uri, 
         secret,
         password: password.trim() || undefined 
       });
       setStatus(`Payload created with id ${result.id}`);
       Alert.alert('Success', 'Message hidden successfully!');
       // Reset form
-      setSelectedMedia(null);
+      setSelectedVideo(null);
       setSecret('');
       setPassword('');
     } catch (error) {
@@ -97,49 +75,37 @@ export default function HideMessageScreen() {
           headerShown: true,
           headerStyle: { backgroundColor: '#161622' },
           headerTintColor: '#FFFFFF',
-          title: 'Hide Message'
+          title: 'Hide Message in Video'
         }}
       />
       <View className="flex-row items-center gap-2 mb-2">
-        <ImageIcon size={28} color="#FF9C01" />
+        <Video size={28} color="#FF9C01" />
         <Text className="text-3xl text-white font-poppins_bold">
-          Hide Message
+          Hide Message in Video
         </Text>
       </View>
       <Text className="text-white/70 mb-6 font-poppins">
-        Embed covert text into images or videos locally before syncing to Firebase Vault.
+        Embed covert text into videos locally before syncing to Firebase Vault.
       </Text>
 
       <View className="gap-5">
         <View>
           <Text className="text-white font-poppins_medium mb-2">
-            Select Media
+            Select Video
           </Text>
-          <View className="flex-row gap-3">
-            <AppButton
-              title="Choose Image"
-              variant="secondary"
-              className="flex-1"
-              icon={<ImageIcon size={18} color="#FFFFFF" />}
-              onPress={pickImage}
-            />
-            <AppButton
-              title="Choose Video"
-              variant="secondary"
-              className="flex-1"
-              icon={<Upload size={18} color="#FFFFFF" />}
-              onPress={pickVideo}
-            />
-          </View>
-          {selectedMedia && (
+          <AppButton
+            title="Choose Video"
+            variant="secondary"
+            icon={<Video size={18} color="#FFFFFF" />}
+            onPress={pickVideo}
+          />
+          {selectedVideo && (
             <View className="mt-3">
-              <Image
-                source={{ uri: selectedMedia.uri }}
-                className="w-full h-48 rounded-2xl"
-                resizeMode="cover"
-              />
+              <View className="w-full h-48 bg-black-200 rounded-2xl items-center justify-center">
+                <Video size={48} color="#FF9C01" />
+              </View>
               <Text className="text-white/60 text-sm mt-2 font-poppins">
-                {selectedMedia.type === 'video' ? 'Video' : 'Image'} selected
+                Video selected
               </Text>
             </View>
           )}
@@ -177,5 +143,4 @@ export default function HideMessageScreen() {
     </ScrollView>
   );
 }
-
 

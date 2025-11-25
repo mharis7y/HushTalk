@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, ScrollView, Dimensions, Alert, Image } from "react-native";
+import { View, Text, ScrollView, Dimensions, Alert, Image , KeyboardAvoidingView } from "react-native";
+import { Lock, Mail, Key } from "lucide-react-native";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import { signIn } from "../../lib/firebase";
 import CustomButton from "../../components/CustomButton";
@@ -26,10 +27,8 @@ const login = () => {
       if (result.success) {
         // User will be automatically set by onAuthStateChanged in GlobalProvider
         router.replace("/home");
-      } else if (result.message== '(auth/invalid-credential).') {
-        Alert.alert("Error", 'Invalid Credentials' );
-      } else {
-        Alert.alert("Error", 'Invalid Email' );
+      } else  {
+        Alert.alert("Error", result.msg || "Failed to create account");
       }
     } catch (error) {
       Alert.alert("Error", error.message || "An unexpected error occurred");
@@ -39,7 +38,8 @@ const login = () => {
   };
 
   return (
-    <SafeAreaView className="bg-primary h-full">
+    <KeyboardAvoidingView behavior="padding" className="bg-primary h-full">
+    
       <ScrollView keyboardDismissMode="on-drag">
         <View
           className="w-full flex justify-center h-full px-4 my-6"
@@ -47,11 +47,12 @@ const login = () => {
             minHeight: Dimensions.get("window").height - 100,
           }}
         >
-          
-
-          <Text className="text-2xl font-semibold text-white mt-10 font-poppins_semibold text-center">
-            Log in to HushTalk
-          </Text>
+          <View className="items-center mt-10 mb-6">
+            <Lock size={48} color="#FF9C01" />
+            <Text className="text-2xl font-semibold text-white mt-4 font-poppins_semibold text-center">
+              Log in to HushTalk
+            </Text>
+          </View>
 
           <FormField
             title="Email"
@@ -88,7 +89,8 @@ const login = () => {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+      
+      </KeyboardAvoidingView>
   );
 };
 
