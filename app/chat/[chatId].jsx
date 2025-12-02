@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { SafeAreaView, Text, TextInput, View, ActivityIndicator, KeyboardAvoidingView } from 'react-native';
+import { TextInput, View, ActivityIndicator, KeyboardAvoidingView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { Send } from 'lucide-react-native';
 import MessageList from '../../components/MessageList';
-import { db, auth } from '../../lib/firebase';
+import { db } from '../../lib/firebase';
 import { collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, doc, getDoc, getDocs } from 'firebase/firestore';
 import { useGlobalContext } from '../../context/GlobalProvider';
-import CustomButton from '../../components/CustomButton';
+
 
 export default function ChatDetailScreen() {
   const { chatId } = useLocalSearchParams();
@@ -121,7 +122,7 @@ export default function ChatDetailScreen() {
           title: otherUser?.username || 'Chat',
         }}
       />
-      <KeyboardAvoidingView behavior='padding' keyboardVerticalOffset={0} className="flex-1 px-4">
+      <KeyboardAvoidingView behavior='padding' keyboardVerticalOffset={100} className="flex-1 px-4">
         {loading ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" color="#FF9C01" />
@@ -129,7 +130,7 @@ export default function ChatDetailScreen() {
         ) : (
           <MessageList messages={messages} currentUserId={user?.uid} />
         )}
-        <View className="flex-row items-center gap-2 mb-6">
+        <View className="flex-row items-center gap-2">
           <TextInput
             placeholder="Send a message..."
             placeholderTextColor="#8D8DAA"
@@ -138,11 +139,7 @@ export default function ChatDetailScreen() {
             multiline
             className="flex-1 min-h-[48px] max-h-[120px] bg-black-100 rounded-2xl px-6 py-3 text-white font-poppins"
           />
-          <CustomButton
-            title="Send"
-            containerStyles="px-4 min-h-[40px]"
-            handlePress={handleSend}
-          />
+          <Send onPress={handleSend} color={'#FF9C01'}/>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

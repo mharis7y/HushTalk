@@ -9,9 +9,10 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { Search, MessageCircle } from 'lucide-react-native';
-import { db, auth } from '../../lib/firebase';
+import { db } from '../../lib/firebase';
 import { collection, query, where, getDocs, getDoc, doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { useGlobalContext } from '../../context/GlobalProvider';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ChatsScreen() {
   const { user, preloadedUsers, preloadedChats } = useGlobalContext();
@@ -109,7 +110,7 @@ export default function ChatsScreen() {
   const displayData = searchQuery ? filteredUsers : users;
 
   return (
-    <View className="flex-1 bg-primary px-6 pt-16">
+    <SafeAreaView className="flex-1 bg-primary px-6 pt-5">
       <View className="flex-row items-center gap-2 mb-2">
         <MessageCircle size={28} color="#FF9C01" />
         <Text className="text-3xl text-white font-poppins_bold">
@@ -188,7 +189,7 @@ export default function ChatsScreen() {
           }
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 

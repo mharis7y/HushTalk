@@ -14,6 +14,7 @@ import { router } from "expo-router";
 import { vaultItems as initialVaultItems } from "../../constants/dummy";
 import AppButton from "../../components/AppButton";
 import { Download, Trash2, Image as ImageIcon, Lock } from "lucide-react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const dialogOptions = [
   { label: "Image", id: "image" },
@@ -112,7 +113,7 @@ export default function VaultScreen() {
   );
 
   return (
-    <View className="flex-1 bg-primary px-6 pt-16">
+    <SafeAreaView className="flex-1 bg-primary px-6 pt-5">
       {/* Title */}
       <View className="flex-row items-center gap-2 mb-6">
         <Lock size={28} color="#FF9C01" />
@@ -202,7 +203,7 @@ export default function VaultScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 

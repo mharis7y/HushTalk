@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image } from "react-native";
-
+import { Mail, Lock, User } from "lucide-react-native";
 import { icons } from "../constants";
 
 const FormField = ({
@@ -18,6 +18,16 @@ const FormField = ({
       <Text className="text-base text-gray font-poppins_medium">{title}</Text>
 
       <View className="w-full h-16 px-4 bg-black-100 rounded-2xl border-2 border-black-200 focus:border-secondary flex flex-row items-center">
+      {title === "Email" && (
+          <Mail size={22} color="#7B7B8B" />
+        )}
+
+        {title === "Password" && (
+          <Lock size={22} color="#7B7B8B" />
+        )}
+        {title === "Username" && (
+          <User size={22} color="#7B7B8B" />
+        )}
         <TextInput
           className="flex-1 text-white font-poppins_semibold text-base"
           value={value}
@@ -27,7 +37,7 @@ const FormField = ({
           secureTextEntry={title === "Password" && !showPassword}
           {...props}
         />
-
+      
         {title === "Password" && (
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
             <Image

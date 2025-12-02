@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { FlatList, Text, View, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { MessageCircle, Image as ImageIcon, Clock, Users, Lock } from 'lucide-react-native';
-import { db, auth } from '../../lib/firebase';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
+import { collection, query, where, getDocs, } from 'firebase/firestore';
 import Header from '../../components/Header';
 import AppButton from '../../components/AppButton';
 import { vaultItems as initialVaultItems } from '../../constants/dummy';
 import { useGlobalContext } from '../../context/GlobalProvider';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
   const { user, preloadedChats } = useGlobalContext();
@@ -56,7 +57,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <View className="flex-1 bg-primary px-6 pt-16">
+    <SafeAreaView className="flex-1 bg-primary px-6 pt-5">
       <Header
         subtitle="Welcome Back"
         title={user?.displayName}
@@ -167,7 +168,7 @@ export default function HomeScreen() {
           />
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 

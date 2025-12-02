@@ -3,12 +3,12 @@ import { KeyboardAvoidingView,Image, ScrollView, Text, View, Alert } from 'react
 import { User, Lock, LogOut } from 'lucide-react-native';
 import AppInput from '../../components/AppInput';
 import AppButton from '../../components/AppButton';
-import { userProfile } from '../../constants/dummy';
 import { router } from 'expo-router';
 import { signOut, auth, db } from '../../lib/firebase';
 import { updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, updateDoc } from 'firebase/firestore';
 import { useGlobalContext } from '../../context/GlobalProvider';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ProfileScreen() {
   const { user, setUser } = useGlobalContext();
@@ -119,7 +119,8 @@ export default function ProfileScreen() {
   };
 
   return (
-    <KeyboardAvoidingView behavior="padding" className="flex-1 bg-primary px-6 pt-10">
+    <SafeAreaView className="flex-1 bg-primary px-6 pt-5">
+    <KeyboardAvoidingView behavior="padding" >
     <ScrollView keyboardDismissMode="on-drag">
       <View className="items-center mb-8">
         <View className="h-24 w-24 rounded-3xl mb-4 bg-secondary-100 items-center justify-center">
@@ -187,7 +188,7 @@ export default function ProfileScreen() {
         />
       </View>
 
-      <View className="mt-12 mb-10 ">
+      <View className="mt-12 mb-5 ">
         <AppButton
           title="Log Out"
           variant="ghost"
@@ -197,6 +198,7 @@ export default function ProfileScreen() {
       </View>
     </ScrollView>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 

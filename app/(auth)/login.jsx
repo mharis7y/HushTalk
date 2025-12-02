@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { Link, router } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { View, Text, ScrollView, Dimensions, Alert, Image , KeyboardAvoidingView } from "react-native";
-import { Lock, Mail, Key } from "lucide-react-native";
-import { useGlobalContext } from "../../context/GlobalProvider";
+import { Lock} from "lucide-react-native";
 import { signIn } from "../../lib/firebase";
 import CustomButton from "../../components/CustomButton";
 import FormField from "../../components/FormField";
@@ -53,7 +51,6 @@ const login = () => {
               Log in to HushTalk
             </Text>
           </View>
-
           <FormField
             title="Email"
             value={form.email}

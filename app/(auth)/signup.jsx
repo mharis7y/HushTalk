@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { Link, router } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useGlobalContext } from "../../context/GlobalProvider";
 import { createUser } from "../../lib/firebase";
 import { View, Text, ScrollView, Dimensions, Alert, Image } from "react-native";
 import { KeyboardAvoidingView } from "react-native";
-import { Lock, Mail, Key, User } from "lucide-react-native";
+import { Lock } from "lucide-react-native";
 import CustomButton from "../../components/CustomButton";
 import FormField from "../../components/FormField";
 
