@@ -13,10 +13,11 @@ const SignUp = () => {
     username: "",
     email: "",
     password: "",
+    phoneNumber: "",
   });
 
   const submit = async () => {
-    if (form.username === "" || form.email === "" || form.password === "") {
+    if (form.username === "" || form.email === "" || form.password === "" || form.phoneNumber === "") {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
@@ -25,10 +26,14 @@ const SignUp = () => {
       Alert.alert("Error", "Password must be at least 6 characters");
       return;
     }
+    if (form.phoneNumber.length < 11) {
+      Alert.alert("Error", "Phone number must be 11 digits");
+      return;
+    }
 
     setSubmitting(true);
     try {
-      const result = await createUser(form.email, form.password, form.username);
+      const result = await createUser(form.email, form.password, form.username, form.phoneNumber);
       if (result.success) {
         // User will be automatically set by onAuthStateChanged in GlobalProvider
         router.replace("/home");
@@ -51,7 +56,7 @@ const SignUp = () => {
             minHeight: Dimensions.get("window").height - 100,
           }}
         >
-          <View className="items-center mt-10 mb-6">
+          <View className="items-center mt-10">
             <Lock size={48} color="#FF9C01" />
             <Text className="text-2xl font-semibold text-white mt-4 font-poppins_semibold text-center">
               Sign Up to HushTalk
@@ -71,6 +76,15 @@ const SignUp = () => {
             handleChangeText={(e) => setForm({ ...form, email: e })}
             otherStyles="mt-7"
             keyboardType="email-address"
+          />
+
+          <FormField
+            title="Phone Number"
+            value={form.phoneNumber}
+            handleChangeText={(e) => setForm({ ...form, phoneNumber: e })}
+            placeholder="03xxxxxxxxx"
+            otherStyles="mt-7"
+            keyboardType="phone-number"
           />
 
           <FormField

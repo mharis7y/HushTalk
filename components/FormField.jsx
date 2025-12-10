@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image } from "react-native";
-import { Mail, Lock, User } from "lucide-react-native";
+import { Mail, Lock, User, Phone } from "lucide-react-native";
 import { icons } from "../constants";
 
 const FormField = ({
@@ -27,9 +27,12 @@ const FormField = ({
         )}
         {title === "Username" && (
           <User size={22} color="#7B7B8B" />
+        )}  
+        {title === "Phone Number" && (
+          <Phone size={22} color="#7B7B8B" />
         )}
         <TextInput
-          className="flex-1 text-white font-poppins_semibold text-base"
+          className="flex-1 text-white font-poppins_semibold text-base pl-5 text-[15px] mt-2"
           value={value}
           placeholder={placeholder}
           placeholderTextColor="#7B7B8B"

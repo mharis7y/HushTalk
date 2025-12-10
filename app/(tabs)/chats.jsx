@@ -168,7 +168,7 @@ export default function ChatsScreen() {
                       {item.username || 'Unknown User'}
                     </Text>
                     <Text className="text-white/60 text-sm mt-1 font-poppins">
-                      {item.email || ''}
+                      {item.phoneNumber || ''}
                     </Text>
                   </View>
                   {unreadCount > 0 && (
