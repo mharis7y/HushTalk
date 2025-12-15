@@ -32,7 +32,7 @@ const FormField = ({
           <Phone size={22} color="#7B7B8B" />
         )}
         <TextInput
-          className="flex-1 text-white font-poppins_semibold text-base pl-5 text-[15px] mt-2"
+          className="flex-1 text-white font-poppins_semibold text-base pl-5 text-[10px] mt-2"
           value={value}
           placeholder={placeholder}
           placeholderTextColor="#7B7B8B"

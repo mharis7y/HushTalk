@@ -103,9 +103,13 @@ export default function ChatsScreen() {
     router.push(`/chat/${chatId}`);
   };
 
-  const filteredUsers = users.filter((u) =>
-    u.username?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = users.filter((u) => {
+    const usernameMatch = u.username?.toLowerCase().includes(searchQuery.toLowerCase());
+    const phoneMatch = u.phoneNumber?.toLowerCase().includes(searchQuery.toLowerCase());
+  
+    return usernameMatch || phoneMatch;
+  });
+  
 
   const displayData = searchQuery ? filteredUsers : users;
 

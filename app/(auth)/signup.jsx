@@ -58,7 +58,7 @@ const SignUp = () => {
         >
           <View className="items-center mt-10">
             <Lock size={48} color="#FF9C01" />
-            <Text className="text-2xl font-semibold text-white mt-4 font-poppins_semibold text-center">
+            <Text className="text-2xl text-white mt-4 font-poppins_semibold text-center">
               Sign Up to HushTalk
             </Text>
           </View>
@@ -66,6 +66,7 @@ const SignUp = () => {
           <FormField
             title="Username"
             value={form.username}
+            placeholder="Muhammad Haris"
             handleChangeText={(e) => setForm({ ...form, username: e })}
             otherStyles="mt-10"
           />
@@ -73,6 +74,7 @@ const SignUp = () => {
           <FormField
             title="Email"
             value={form.email}
+            placeholder="mharis7y@gmail.com"
             handleChangeText={(e) => setForm({ ...form, email: e })}
             otherStyles="mt-7"
             keyboardType="email-address"
@@ -90,6 +92,7 @@ const SignUp = () => {
           <FormField
             title="Password"
             value={form.password}
+            placeholder="********"
             handleChangeText={(e) => setForm({ ...form, password: e })}
             otherStyles="mt-7"
           />
