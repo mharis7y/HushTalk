@@ -33,7 +33,11 @@
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.mharis7y.hushtalk"
+      "package": "com.mharis7y.hushtalk",
+      "permissions": [
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO"
+      ]
     },
     "extra": {
       "eas": {

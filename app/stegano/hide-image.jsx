@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Stack } from 'expo-router';
 import { ScrollView, Text, View, Image, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Image as ImageIcon, Lock } from 'lucide-react-native';
 import AppButton from '../../components/AppButton';
@@ -49,13 +50,16 @@ export default function HideImageScreen() {
     try {
       setLoading(true);
       setStatus('Encoding...');
-      const result = await encodeMessage({ 
-        carrier: selectedImage.uri, 
+      const result = await encodeMessage({
+        carrier: selectedImage.uri,
         secret,
-        password: password.trim() || undefined 
+        password: password.trim() || undefined,
       });
-      setStatus(`Payload created with id ${result.id}`);
-      Alert.alert('Success', 'Message hidden successfully!');
+      setStatus('Message hidden successfully! Secret image saved to gallery.');
+      Alert.alert(
+        'Success',
+        'Message hidden successfully! The steganofied image has been saved to your HushTalk album in the gallery.',
+      );
       // Reset form
       setSelectedImage(null);
       setSecret('');
@@ -69,80 +73,86 @@ export default function HideImageScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-primary px-6 pt-16">
+    <SafeAreaView className="flex-1 bg-primary">
       <Stack.Screen
         options={{
           headerShown: true,
           headerStyle: { backgroundColor: '#161622' },
           headerTintColor: '#FFFFFF',
-          title: 'Hide Message in Image'
+          title: 'Hide Message in Image',
         }}
       />
-      <View className="flex-row items-center gap-2 mb-2">
-        <ImageIcon size={28} color="#FF9C01" />
-        <Text className="text-3xl text-white font-poppins_bold">
-          Hide Message in Image
-        </Text>
-      </View>
-      <Text className="text-white/70 mb-6 font-poppins">
-        Embed covert text into images locally before syncing to Firebase Vault.
-      </Text>
-
-      <View className="gap-5">
-        <View>
-          <Text className="text-white font-poppins_medium mb-2">
-            Select Image
+      <ScrollView
+        className="flex-1 px-6"
+        contentContainerStyle={{ paddingTop: 16, paddingBottom: 32 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
+        <View className="flex-row items-center gap-2 mb-2 flex-wrap">
+          <ImageIcon size={24} color="#FF9C01" />
+          <Text className="text-2xl text-white font-poppins_bold flex-1">
+            Hide Message in Image
           </Text>
-          <AppButton
-            title="Choose Image"
-            variant="secondary"
-            icon={<ImageIcon size={18} color="#FFFFFF" />}
-            onPress={pickImage}
-          />
-          {selectedImage && (
-            <View className="mt-3">
-              <Image
-                source={{ uri: selectedImage.uri }}
-                className="w-full h-48 rounded-2xl"
-                resizeMode="cover"
-              />
-              <Text className="text-white/60 text-sm mt-2 font-poppins">
-                Image selected
-              </Text>
-            </View>
-          )}
         </View>
+        <Text className="text-white/70 mb-6 font-poppins">
+          Embed covert text into images locally before syncing to Firebase Vault.
+        </Text>
 
-        <AppInput
-          label="Secret Text"
-          placeholder="Enter the text you want to hide"
-          value={secret}
-          onChangeText={setSecret}
-          multiline
-          numberOfLines={5}
-        />
+        <View className="gap-5">
+          <View>
+            <Text className="text-white font-poppins_medium mb-2">
+              Select Image
+            </Text>
+            <AppButton
+              title="Choose Image"
+              variant="secondary"
+              icon={<ImageIcon size={18} color="#FFFFFF" />}
+              onPress={pickImage}
+            />
+            {selectedImage && (
+              <View className="mt-3">
+                <Image
+                  source={{ uri: selectedImage.uri }}
+                  className="w-full h-48 rounded-2xl"
+                  resizeMode="cover"
+                />
+                <Text className="text-white/60 text-sm mt-2 font-poppins">
+                  Image selected
+                </Text>
+              </View>
+            )}
+          </View>
 
-        <AppInput
-          label="Password (Optional)"
-          placeholder="Enter password to protect the hidden message"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+          <AppInput
+            label="Secret Text"
+            placeholder="Enter the text you want to hide"
+            value={secret}
+            onChangeText={setSecret}
+            multiline
+            numberOfLines={5}
+          />
 
-        <AppButton 
-          title="Encode Message" 
-          onPress={handleEncode}
-          disabled={loading}
-        />
+          <AppInput
+            label="Password (Optional)"
+            placeholder="Enter password to protect the hidden message"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
 
-        {status ? (
-          <Text className="text-secondary font-poppins_medium text-center">
-            {status}
-          </Text>
-        ) : null}
-      </View>
-    </ScrollView>
+          <AppButton
+            title={loading ? 'Encoding...' : 'Encode Message'}
+            onPress={handleEncode}
+            disabled={loading}
+          />
+
+          {status ? (
+            <Text className="text-secondary font-poppins_medium text-center">
+              {status}
+            </Text>
+          ) : null}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
