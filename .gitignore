@@ -34,3 +34,14 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# Android build artifacts
+android/**/build/
+android/.cxx/
+android/.gradle/
+
+# Native build output
+build/
+
+# CMake / NDK
+**/CMakeFiles/
+**/cmake-build-*/

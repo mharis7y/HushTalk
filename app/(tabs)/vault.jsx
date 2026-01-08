@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FlatList,
   Modal,
@@ -11,10 +11,15 @@ import {
 } from "react-native";
 import Toast from 'react-native-toast-message';
 import { router } from "expo-router";
-import { vaultItems as initialVaultItems } from "../../constants/dummy";
+import * as FileSystem from 'expo-file-system/legacy';
+import * as MediaLibrary from 'expo-media-library';
+import { Query } from 'react-native-appwrite';
+
 import AppButton from "../../components/AppButton";
 import { Download, Trash2, Image as ImageIcon, Lock } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useGlobalContext } from "../../context/GlobalProvider";
+import { databases, storage, APPWRITE_CONFIG } from "../../lib/appwriteConfig";
 
 const dialogOptions = [
   { label: "Image", id: "image" },
@@ -22,8 +27,52 @@ const dialogOptions = [
 ];
 
 export default function VaultScreen() {
+  const { user } = useGlobalContext();
   const [dialog, setDialog] = useState(null);
-  const [vaultItems, setVaultItems] = useState(initialVaultItems);
+  const [vaultItems, setVaultItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch Logic
+  const fetchVaultItems = async () => {
+    if (!user) return;
+    try {
+      setLoading(true);
+      const response = await databases.listDocuments(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collectionId,
+        [
+          Query.equal('ownerId', user.uid),
+          Query.orderDesc('$createdAt')
+        ]
+      );
+
+      const items = response.documents.map(doc => ({
+        id: doc.$id,
+        fileId: doc.fileId,
+        title: doc.fileName,
+        fileType: doc.type,
+        createdAt: new Date(doc.$createdAt).toLocaleDateString(),
+        // Use /download endpoint (not /view) to get the raw unmodified file
+        downloadUrl: `https://cloud.appwrite.io/v1/storage/buckets/${APPWRITE_CONFIG.bucketId}/files/${doc.fileId}/download?project=${APPWRITE_CONFIG.projectId}`,
+        fileId: doc.fileId
+      }));
+
+      setVaultItems(items);
+    } catch (error) {
+      console.error("Error fetching vault items:", error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to refresh vault',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchVaultItems();
+  }, [user]);
 
   const openDialog = (mode) => setDialog(mode);
 
@@ -34,19 +83,80 @@ export default function VaultScreen() {
     router.push(`/stegano/${basePath}-${mediaType}`);
   };
 
-  const handleDownload = (item) => {
-    Toast.show({
-      type: 'success',
-      text1: 'Image Download',
-      text2: 'Image saved to gallery!',
-      position: 'bottom',
-    });
+  const handleDownload = async (item) => {
+    try {
+      // Ensure filename ends with .png to preserve format
+      let fileName = item.title;
+      if (!fileName.toLowerCase().endsWith('.png')) {
+        fileName = fileName.replace(/\.[^.]+$/, '') + '.png';
+      }
+
+      // Download to cache directory first (raw bytes, no modification)
+      const cacheUri = `${FileSystem.cacheDirectory}${fileName}`;
+
+      const downloadResumable = FileSystem.createDownloadResumable(
+        item.downloadUrl,
+        cacheUri,
+        {},
+        null
+      );
+
+      const result = await downloadResumable.downloadAsync();
+
+      if (!result || !result.uri) {
+        throw new Error('Download failed - no file URI returned');
+      }
+
+      // Use Storage Access Framework to save directly without modification
+      // Request permission to access a directory where user wants to save
+      const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+
+      if (!permissions.granted) {
+        Alert.alert('Permission needed', 'Please select a folder to save the image.');
+        return;
+      }
+
+      // Read the downloaded file as base64
+      const fileContent = await FileSystem.readAsStringAsync(result.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Create file directly in the chosen directory (no modification)
+      const newFileUri = await FileSystem.StorageAccessFramework.createFileAsync(
+        permissions.directoryUri,
+        fileName,
+        'image/png'
+      );
+
+      // Write the exact bytes to the new file
+      await FileSystem.writeAsStringAsync(newFileUri, fileContent, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Clean up cache
+      await FileSystem.deleteAsync(result.uri, { idempotent: true });
+
+      Toast.show({
+        type: 'success',
+        text1: 'Download Complete',
+        text2: 'Image saved without modification',
+        position: 'bottom',
+      });
+    } catch (error) {
+      console.error('Download error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to download file',
+        position: 'bottom'
+      });
+    }
   };
 
-  const handleDelete = (itemId) => {
+  const handleDelete = (item) => {
     Alert.alert(
       'Delete Item',
-      'Are you sure you want to delete this item?',
+      'Are you sure you want to delete this item? This cannot be undone.',
       [
         {
           text: 'Cancel',
@@ -55,9 +165,30 @@ export default function VaultScreen() {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => {
-            setVaultItems((prev) => prev.filter((item) => item.id !== itemId));
-            Alert.alert('Success', 'Item deleted successfully!');
+          onPress: async () => {
+            try {
+              // 1. Delete from Storage
+              await storage.deleteFile(APPWRITE_CONFIG.bucketId, item.fileId);
+
+              // 2. Delete from Database
+              await databases.deleteDocument(
+                APPWRITE_CONFIG.databaseId,
+                APPWRITE_CONFIG.collectionId,
+                item.id
+              );
+
+              // 3. Update local state
+              setVaultItems(prev => prev.filter(i => i.id !== item.id));
+
+              Toast.show({
+                type: 'success',
+                text1: 'Deleted',
+                text2: 'Item removed successfully',
+              });
+            } catch (error) {
+              console.error('Delete error:', error);
+              Alert.alert('Error', 'Failed to delete item');
+            }
           },
         },
       ]
@@ -67,14 +198,12 @@ export default function VaultScreen() {
   const renderItem = ({ item }) => (
     <View className="bg-[#1E1E28] rounded-2xl p-4 mb-4 flex-row items-center">
       {/* Thumbnail Placeholder */}
-      <View className="w-16 h-16 bg-black-200 rounded-xl mr-4 overflow-hidden">
+      <View className="w-16 h-16 bg-black-200 rounded-xl mr-4 overflow-hidden items-center justify-center">
         <Image
-          source={{
-            uri:
-              item.thumbnail ??
-              "https://via.placeholder.com/100x100.png?text=IMG",
-          }}
-          className="w-full h-full"
+          source={require('../../assets/images/splash-icon.png')}
+          className="w-10 h-10"
+          resizeMode="contain"
+          style={{ tintColor: '#FF9C01' }}
         />
       </View>
 
@@ -84,11 +213,11 @@ export default function VaultScreen() {
           {item.title}
         </Text>
         <Text className="text-white/60 mt-0.5 font-poppins">{item.createdAt}</Text>
-        <Text className="text-white/40 text-sm mt-1 font-poppins_light">{item.fileType}</Text>
+        <Text className="text-white/40 text-sm mt-1 font-poppins_light capitalize">{item.fileType}</Text>
 
         {/* Button Row */}
         <View className="flex-row mt-3 items-center">
-          <Pressable 
+          <Pressable
             className="flex-row items-center mr-6"
             onPress={() => handleDownload(item)}
           >
@@ -98,9 +227,9 @@ export default function VaultScreen() {
             </Text>
           </Pressable>
 
-          <Pressable 
+          <Pressable
             className="flex-row items-center"
-            onPress={() => handleDelete(item.id)}
+            onPress={() => handleDelete(item)}
           >
             <Trash2 size={16} color="#FF4C4C" />
             <Text className="text-[#FF4C4C] ml-2 font-poppins_medium">
@@ -123,26 +252,26 @@ export default function VaultScreen() {
       </View>
 
       {/* Top Card (Primary background with Secondary buttons) */}
-<View className="bg-primary border border-white/10 rounded-2xl p-6 mb-8">
-  
+      <View className="bg-primary border border-white/10 rounded-2xl p-6 mb-8">
 
-  <View className="flex-row gap-3">
-    <AppButton
-      title="Hide Message"
-      className="flex-1"
-      icon={<ImageIcon size={18} color="#FFFFFF" />}
-      onPress={() => openDialog('hide')}
-    />
 
-    <AppButton
-      title="Extract Message"
-      variant="secondary"
-      className="flex-1"
-      icon={<Lock size={18} color="#FFFFFF" />}
-      onPress={() => openDialog('extract')}
-    />
-  </View>
-</View>
+        <View className="flex-row gap-3">
+          <AppButton
+            title="Hide Message"
+            className="flex-1"
+            icon={<ImageIcon size={18} color="#FFFFFF" />}
+            onPress={() => openDialog('hide')}
+          />
+
+          <AppButton
+            title="Extract Message"
+            variant="secondary"
+            className="flex-1"
+            icon={<Lock size={18} color="#FFFFFF" />}
+            onPress={() => openDialog('extract')}
+          />
+        </View>
+      </View>
 
 
       {/* Section Title */}
@@ -156,10 +285,14 @@ export default function VaultScreen() {
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         renderItem={renderItem}
+        refreshing={loading}
+        onRefresh={fetchVaultItems}
         ListEmptyComponent={
-          <Text className="text-center text-white/50 mt-16">
-            Nothing hidden yet.
-          </Text>
+          !loading && (
+            <Text className="text-center text-white/50 mt-16 font-poppins">
+              Nothing hidden yet.
+            </Text>
+          )
         }
       />
 

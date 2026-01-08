@@ -28,7 +28,7 @@ const GlobalProvider = ({ children }) => {
       }
       setLoading(false);
     });
-    
+
     return unsub;
   }, []);
 

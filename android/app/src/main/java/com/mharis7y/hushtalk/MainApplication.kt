@@ -26,6 +26,7 @@ class MainApplication : Application(), ReactApplication {
               // Packages that cannot be autolinked yet can be added manually here, for example:
               // add(MyReactNativePackage())
               add(com.mharis7y.hushtalk.bitmap.BitmapReactPackage())
+              add(com.mharis7y.hushtalk.VideoSteganographyPackage())
             }
 
           override fun getJSMainModuleName(): String = ".expo/.virtual-metro-entry"

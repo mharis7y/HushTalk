@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Stack } from 'expo-router';
-import { ScrollView, Text, TextInput, View, Image, Alert, Pressable } from 'react-native';
+import { ScrollView, Text, TextInput, View, Image, Alert, Pressable, KeyboardAvoidingView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Image as ImageIcon, Lock, Upload } from 'lucide-react-native';
 import AppButton from '../../components/AppButton';
@@ -24,7 +24,7 @@ export default function HideMessageScreen() {
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
+        allowsEditing: false,
         quality: 1,
       });
 
@@ -46,7 +46,7 @@ export default function HideMessageScreen() {
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-        allowsEditing: true,
+        allowsEditing: false,
         quality: 1,
       });
 
@@ -71,10 +71,10 @@ export default function HideMessageScreen() {
     try {
       setLoading(true);
       setStatus('Encoding...');
-      const result = await encodeMessage({ 
-        carrier: selectedMedia.uri, 
+      const result = await encodeMessage({
+        carrier: selectedMedia.uri,
         secret,
-        password: password.trim() || undefined 
+        password: password.trim() || undefined
       });
       setStatus(`Payload created with id ${result.id}`);
       Alert.alert('Success', 'Message hidden successfully!');
@@ -91,90 +91,92 @@ export default function HideMessageScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-primary px-6 pt-16">
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          headerStyle: { backgroundColor: '#161622' },
-          headerTintColor: '#FFFFFF',
-          title: 'Hide Message'
-        }}
-      />
-      <View className="flex-row items-center gap-2 mb-2">
-        <ImageIcon size={28} color="#FF9C01" />
-        <Text className="text-3xl text-white font-poppins_bold">
-          Hide Message
-        </Text>
-      </View>
-      <Text className="text-white/70 mb-6 font-poppins">
-        Embed covert text into images or videos locally before syncing to Firebase Vault.
-      </Text>
-
-      <View className="gap-5">
-        <View>
-          <Text className="text-white font-poppins_medium mb-2">
-            Select Media
+    <KeyboardAvoidingView behavior="padding" className="flex-1 bg-primary">
+      <ScrollView className="flex-1 px-6 pt-16">
+        <Stack.Screen
+          options={{
+            headerShown: true,
+            headerStyle: { backgroundColor: '#161622' },
+            headerTintColor: '#FFFFFF',
+            title: 'Hide Message'
+          }}
+        />
+        <View className="flex-row items-center gap-2 mb-2">
+          <ImageIcon size={28} color="#FF9C01" />
+          <Text className="text-3xl text-white font-poppins_bold">
+            Hide Message
           </Text>
-          <View className="flex-row gap-3">
-            <AppButton
-              title="Choose Image"
-              variant="secondary"
-              className="flex-1"
-              icon={<ImageIcon size={18} color="#FFFFFF" />}
-              onPress={pickImage}
-            />
-            <AppButton
-              title="Choose Video"
-              variant="secondary"
-              className="flex-1"
-              icon={<Upload size={18} color="#FFFFFF" />}
-              onPress={pickVideo}
-            />
-          </View>
-          {selectedMedia && (
-            <View className="mt-3">
-              <Image
-                source={{ uri: selectedMedia.uri }}
-                className="w-full h-48 rounded-2xl"
-                resizeMode="cover"
-              />
-              <Text className="text-white/60 text-sm mt-2 font-poppins">
-                {selectedMedia.type === 'video' ? 'Video' : 'Image'} selected
-              </Text>
-            </View>
-          )}
         </View>
+        <Text className="text-white/70 mb-6 font-poppins">
+          Embed covert text into images or videos locally before syncing to Firebase Vault.
+        </Text>
 
-        <AppInput
-          label="Secret Text"
-          placeholder="Enter the text you want to hide"
-          value={secret}
-          onChangeText={setSecret}
-          multiline
-          numberOfLines={5}
-        />
+        <View className="gap-5">
+          <View>
+            <Text className="text-white font-poppins_medium mb-2">
+              Select Media
+            </Text>
+            <View className="flex-row gap-3">
+              <AppButton
+                title="Choose Image"
+                variant="secondary"
+                className="flex-1"
+                icon={<ImageIcon size={18} color="#FFFFFF" />}
+                onPress={pickImage}
+              />
+              <AppButton
+                title="Choose Video"
+                variant="secondary"
+                className="flex-1"
+                icon={<Upload size={18} color="#FFFFFF" />}
+                onPress={pickVideo}
+              />
+            </View>
+            {selectedMedia && (
+              <View className="mt-3">
+                <Image
+                  source={{ uri: selectedMedia.uri }}
+                  className="w-full h-48 rounded-2xl"
+                  resizeMode="cover"
+                />
+                <Text className="text-white/60 text-sm mt-2 font-poppins">
+                  {selectedMedia.type === 'video' ? 'Video' : 'Image'} selected
+                </Text>
+              </View>
+            )}
+          </View>
 
-        <AppInput
-          label="Password (Optional)"
-          placeholder="Enter password to protect the hidden message"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+          <AppInput
+            label="Secret Text"
+            placeholder="Enter the text you want to hide"
+            value={secret}
+            onChangeText={setSecret}
+            multiline
+            numberOfLines={5}
+          />
 
-        <AppButton 
-          title="Encode Message" 
-          onPress={handleEncode}
-          disabled={loading}
-        />
+          <AppInput
+            label="Password (Optional)"
+            placeholder="Enter password to protect the hidden message"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
 
-        {status ? (
-          <Text className="text-secondary font-poppins_medium text-center">
-            {status}
-          </Text>
-        ) : null}
-      </View>
-    </ScrollView>
+          <AppButton
+            title="Encode Message"
+            onPress={handleEncode}
+            disabled={loading}
+          />
+
+          {status ? (
+            <Text className="text-secondary font-poppins_medium text-center">
+              {status}
+            </Text>
+          ) : null}
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 

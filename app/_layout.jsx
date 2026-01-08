@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import GlobalProvider from "../context/GlobalProvider";
+import { requestAllPermissions } from '../lib/permissions';
 import {
   useFonts,
   Poppins_100Thin,
@@ -38,9 +39,19 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
-    }
+    const initializeApp = async () => {
+      if (fontsLoaded || fontError) {
+        // Request all permissions at app launch
+        try {
+          await requestAllPermissions();
+        } catch (error) {
+          console.error('Error requesting permissions:', error);
+        }
+        SplashScreen.hideAsync();
+      }
+    };
+
+    initializeApp();
   }, [fontsLoaded, fontError]);
 
   if (!fontsLoaded && !fontError) {

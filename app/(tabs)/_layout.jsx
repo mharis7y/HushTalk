@@ -1,15 +1,17 @@
-import { Redirect,Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 import { useGlobalContext } from '../../context/GlobalProvider';
 import { Ionicons } from '@expo/vector-icons';
 import { View, Text } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TabIcon = ({ name, color, label }) => (
   <View className="items-center justify-center gap-1">
     <Ionicons name={name} size={22} color={color} />
     <Text
-      className={`text-[10px] whitespace-nowrap font-poppins ${
-        color === '#FF9C01' ? 'text-secondary' : 'text-white/60'
-      }`}
+      className={`text-[10px] font-poppins text-center w-full ${color === '#FF9C01' ? 'text-secondary' : 'text-white/60'
+        }`}
+      numberOfLines={1}
+      adjustsFontSizeToFit
     >
       {label}
     </Text>
@@ -18,6 +20,7 @@ const TabIcon = ({ name, color, label }) => (
 
 export default function TabsLayout() {
   const { loading, isLogged } = useGlobalContext();
+  const { bottom } = useSafeAreaInsets();
 
   if (!loading && !isLogged) return <Redirect href="/login" />;
   return (
@@ -26,11 +29,11 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: '#1E1E2D',
+          backgroundColor: '#161622',
           borderTopColor: '#232533',
-          height: 80,
-          paddingTop: 8,
-        
+          height: bottom + 60,
+
+          paddingTop: 10,
         },
         tabBarActiveTintColor: '#FF9C01',
         tabBarInactiveTintColor: '#CDCDE0',

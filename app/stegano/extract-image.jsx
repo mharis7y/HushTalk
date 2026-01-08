@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Stack } from 'expo-router';
-import { ScrollView, Text, View, Image, Alert } from 'react-native';
+import { ScrollView, Text, View, Image, Alert, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Image as ImageIcon, Unlock } from 'lucide-react-native';
@@ -24,7 +24,7 @@ export default function ExtractImageScreen() {
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
+        allowsEditing: false,
         quality: 1,
       });
 
@@ -68,71 +68,67 @@ export default function ExtractImageScreen() {
           title: 'Extract Message from Image',
         }}
       />
-      <ScrollView
-        className="flex-1 px-6"
-        contentContainerStyle={{ paddingTop: 24, paddingBottom: 32 }}
-        keyboardShouldPersistTaps="handled">
-        <View className="flex-row items-center gap-2 mb-2">
-          <Unlock size={28} color="#FF9C01" />
-          <Text className="text-3xl text-white font-poppins_bold">
-            Extract Message from Image
-          </Text>
-        </View>
-        <Text className="text-white/70 mb-6 font-poppins">
-          Reveal hidden payloads from images directly on-device.
-        </Text>
-
-        <View className="gap-5">
-          <View>
-            <Text className="text-white font-poppins_medium mb-2">
-              Select Image
+      <KeyboardAvoidingView behavior="padding" className="flex-1">
+        <ScrollView
+          className="flex-1 px-6"
+          contentContainerStyle={{ paddingTop: 24, paddingBottom: 32 }}
+          keyboardShouldPersistTaps="handled">
+          <View className="flex-row items-center gap-2 mb-2">
+            <Unlock size={28} color="#FF9C01" />
+            <Text className="text-3xl text-white font-poppins_bold">
+              Extract Message from Image
             </Text>
+          </View>
+          <Text className="text-white/70 mb-6 font-poppins">
+            Reveal hidden payloads from images directly on-device.
+          </Text>
+
+          <View className="gap-5">
+            <View>
+              <Text className="text-white font-poppins_medium mb-2">
+                Select Image
+              </Text>
+              <AppButton
+                title="Choose Image"
+                variant="secondary"
+                icon={<ImageIcon size={18} color="#FFFFFF" />}
+                onPress={pickImage}
+              />
+              {selectedImage && (
+                <View className="mt-3">
+                  <Image
+                    source={{ uri: selectedImage.uri }}
+                    className="w-full h-48 rounded-2xl"
+                    resizeMode="cover"
+                  />
+                  <Text className="text-white/60 text-sm mt-2 font-poppins">
+                    Image selected
+                  </Text>
+                </View>
+              )}
+            </View>
+
+
+
             <AppButton
-              title="Choose Image"
-              variant="secondary"
-              icon={<ImageIcon size={18} color="#FFFFFF" />}
-              onPress={pickImage}
+              title={loading ? 'Decoding...' : 'Decode Message'}
+              onPress={handleDecode}
+              disabled={loading}
             />
-            {selectedImage && (
-              <View className="mt-3">
-                <Image
-                  source={{ uri: selectedImage.uri }}
-                  className="w-full h-48 rounded-2xl"
-                  resizeMode="cover"
-                />
-                <Text className="text-white/60 text-sm mt-2 font-poppins">
-                  Image selected
+
+            {decoded ? (
+              <View className="bg-black-200 rounded-2xl p-4">
+                <Text className="text-white/60 text-sm mb-2 font-poppins_medium">
+                  Decoded Payload
+                </Text>
+                <Text className="text-white text-base font-poppins">
+                  {decoded}
                 </Text>
               </View>
-            )}
+            ) : null}
           </View>
-
-          <AppInput
-            label="Password (Optional)"
-            placeholder="Enter password if the message was protected"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-
-          <AppButton
-            title={loading ? 'Decoding...' : 'Decode Message'}
-            onPress={handleDecode}
-            disabled={loading}
-          />
-
-          {decoded ? (
-            <View className="bg-black-200 rounded-2xl p-4">
-              <Text className="text-white/60 text-sm mb-2 font-poppins_medium">
-                Decoded Payload
-              </Text>
-              <Text className="text-white text-base font-poppins">
-                {decoded}
-              </Text>
-            </View>
-          ) : null}
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
