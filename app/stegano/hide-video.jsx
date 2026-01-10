@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Stack } from 'expo-router';
-import { ScrollView, Text, View, Alert, KeyboardAvoidingView } from 'react-native';
+import { Text, View, Alert } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Video } from 'lucide-react-native';
@@ -82,9 +83,10 @@ export default function HideVideoScreen() {
           title: 'Hide Message in Video'
         }}
       />
-      <ScrollView
-        className="flex-1 px-6"
+      <KeyboardAwareScrollView
+        enableOnAndroid={true}
         contentContainerStyle={{ paddingTop: 16, paddingBottom: 32 }}
+        className="flex-1 px-6"
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}>
         <View className="flex-row items-center gap-2 mb-2 flex-wrap">
@@ -129,8 +131,6 @@ export default function HideVideoScreen() {
             numberOfLines={5}
           />
 
-
-
           <AppButton
             title={loading ? 'Encoding...' : 'Encode Message'}
             onPress={handleEncode}
@@ -143,7 +143,7 @@ export default function HideVideoScreen() {
             </Text>
           ) : null}
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }

@@ -32,6 +32,7 @@ export default function VaultScreen() {
   const [vaultItems, setVaultItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
   // Fetch Logic
   const fetchVaultItems = async () => {
     if (!user) return;
@@ -53,7 +54,7 @@ export default function VaultScreen() {
         fileType: doc.type,
         createdAt: new Date(doc.$createdAt).toLocaleDateString(),
         // Use /download endpoint (not /view) to get the raw unmodified file
-        downloadUrl: `https://cloud.appwrite.io/v1/storage/buckets/${APPWRITE_CONFIG.bucketId}/files/${doc.fileId}/download?project=${APPWRITE_CONFIG.projectId}`,
+        downloadUrl: `https://sgp.cloud.appwrite.io/v1/storage/buckets/${APPWRITE_CONFIG.bucketId}/files/${doc.fileId}/download?project=${APPWRITE_CONFIG.projectId}`,
         fileId: doc.fileId
       }));
 
@@ -85,69 +86,66 @@ export default function VaultScreen() {
 
   const handleDownload = async (item) => {
     try {
-      // Ensure filename ends with .png to preserve format
+      // 1. Permission Check
+      if (!permissionResponse || permissionResponse.status !== 'granted') {
+        const { status } = await requestPermission();
+        if (status !== 'granted') {
+          Alert.alert("Permission Required", "We need access to your gallery to save the file.");
+          return;
+        }
+      }
+
+      // 2. Sanitize Filename (Ensure .png for steganography)
       let fileName = item.title;
       if (!fileName.toLowerCase().endsWith('.png')) {
         fileName = fileName.replace(/\.[^.]+$/, '') + '.png';
       }
 
-      // Download to cache directory first (raw bytes, no modification)
-      const cacheUri = `${FileSystem.cacheDirectory}${fileName}`;
+      // 3. Define Local Path
+      const localUri = `${FileSystem.documentDirectory}${fileName}`;
 
-      const downloadResumable = FileSystem.createDownloadResumable(
+      // 4. Download File
+      // We use downloadAsync directly. It streams bytes to the file system.
+      // No Base64 conversion happens here, preserving data integrity.
+      const downloadResult = await FileSystem.downloadAsync(
         item.downloadUrl,
-        cacheUri,
-        {},
-        null
+        localUri
       );
 
-      const result = await downloadResumable.downloadAsync();
-
-      if (!result || !result.uri) {
-        throw new Error('Download failed - no file URI returned');
+      if (downloadResult.status !== 200) {
+        throw new Error("Download failed from server");
       }
 
-      // Use Storage Access Framework to save directly without modification
-      // Request permission to access a directory where user wants to save
-      const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+      // 5. Save to Gallery (MediaStore)
+      // createAssetAsync automatically handles Android 10+ MediaStore requirements
+      const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
 
-      if (!permissions.granted) {
-        Alert.alert('Permission needed', 'Please select a folder to save the image.');
-        return;
+      // Optional: Organize into a specific Album (e.g., 'HushTalk')
+      // This is cleaner for the user.
+      const album = await MediaLibrary.getAlbumAsync('HushTalk');
+      if (album == null) {
+        await MediaLibrary.createAlbumAsync('HushTalk', asset, false);
+      } else {
+        await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
       }
 
-      // Read the downloaded file as base64
-      const fileContent = await FileSystem.readAsStringAsync(result.uri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-
-      // Create file directly in the chosen directory (no modification)
-      const newFileUri = await FileSystem.StorageAccessFramework.createFileAsync(
-        permissions.directoryUri,
-        fileName,
-        'image/png'
-      );
-
-      // Write the exact bytes to the new file
-      await FileSystem.writeAsStringAsync(newFileUri, fileContent, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-
-      // Clean up cache
-      await FileSystem.deleteAsync(result.uri, { idempotent: true });
+      // 6. Cleanup Local Cache (Optional but recommended)
+      // We don't need the file in documentDirectory anymore since it's in the Gallery
+      await FileSystem.deleteAsync(downloadResult.uri, { idempotent: true });
 
       Toast.show({
         type: 'success',
-        text1: 'Download Complete',
-        text2: 'Image saved without modification',
+        text1: 'Saved to Gallery',
+        text2: 'File saved to HushTalk album.',
         position: 'bottom',
       });
+
     } catch (error) {
       console.error('Download error:', error);
       Toast.show({
         type: 'error',
-        text1: 'Error',
-        text2: 'Failed to download file',
+        text1: 'Download Failed',
+        text2: error.message || 'Could not save file',
         position: 'bottom'
       });
     }

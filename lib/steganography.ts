@@ -118,13 +118,9 @@ export async function encodeMessage(
       const result = await VideoSteganography.encodeVideo(carrier, payload);
 
       const userId = auth?.currentUser?.uid ?? null;
-      const uploadResult = await uploadStegImageMetadata({
-        userId,
-        uri: result.uri,
-      });
+
 
       return {
-        id: uploadResult.id,
         uri: result.uri,
         userId,
       };
