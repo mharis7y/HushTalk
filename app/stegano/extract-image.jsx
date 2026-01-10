@@ -80,7 +80,7 @@ export default function ExtractImageScreen() {
             </Text>
           </View>
           <Text className="text-white/70 mb-6 font-poppins">
-            Reveal hidden payloads from images directly on-device.
+            Reveal hidden text from images directly on-device.
           </Text>
 
           <View className="gap-5">
@@ -119,7 +119,7 @@ export default function ExtractImageScreen() {
             {decoded ? (
               <View className="bg-black-200 rounded-2xl p-4">
                 <Text className="text-white/60 text-sm mb-2 font-poppins_medium">
-                  Decoded Payload
+                  Decoded Text
                 </Text>
                 <Text className="text-white text-base font-poppins">
                   {decoded}

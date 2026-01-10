@@ -17,17 +17,19 @@ import org.apache.commons.io.IOUtils;
 
 public class SimpleEncodeProcess {
     private static final String TAG = "SimpleEncodeProcess";
-    private static final String H264_LSB1BIT_CONTAINER = "com.mharis7y.hushtalk.algorithms.steganography.video.H264SteganographyContainerLsb1Bit";
+    // Using AAC audio steganography instead of H264 video steganography
+    // H264 with CABAC (High Profile) causes green artifacts, AAC is safe
+    private static final String AAC_LSB1BIT_CONTAINER = "com.mharis7y.hushtalk.algorithms.steganography.audio.AACSteganographyContainerLsb1Bit";
     
     private MP4MediaReader _mp4MediaReader;
-    private ISteganographyContainer _h264SteganographyContainer;
+    private ISteganographyContainer _aacSteganographyContainer;
     private ByteArrayInputStream _contentToHideStream;
     private byte[] _bytesToHide;
     private String _lastError;
 
     public SimpleEncodeProcess() {
         _mp4MediaReader = null;
-        _h264SteganographyContainer = null;
+        _aacSteganographyContainer = null;
         _contentToHideStream = null;
         _bytesToHide = null;
         _lastError = null;
@@ -35,16 +37,16 @@ public class SimpleEncodeProcess {
 
     public boolean encode(VideoEncodeParams parameters) {
         Utils.setStartTime();
-        Log.i(TAG, "Start video encoding");
+        Log.i(TAG, "Start video encoding (AAC audio steganography)");
         _lastError = null;
 
         if (!this.init(parameters)) {
             return false;
         }
 
-        // Hide data in video
-        Log.i(TAG, "Hiding data in video");
-        _h264SteganographyContainer.hideData(_bytesToHide);
+        // Hide data in audio track
+        Log.i(TAG, "Hiding data in audio track");
+        _aacSteganographyContainer.hideData(_bytesToHide);
 
         // Finalize and save
         finalise(parameters);
@@ -61,7 +63,8 @@ public class SimpleEncodeProcess {
         return initContentToHideStream(parameters) &&
                initSteganographyContainer() &&
                initMp4Components(parameters) &&
-               checkEnoughSpaceInVideo();
+               checkAudioTrackExists() &&
+               checkEnoughSpaceInAudio();
     }
 
     private boolean initContentToHideStream(VideoEncodeParams parameters) {
@@ -93,10 +96,10 @@ public class SimpleEncodeProcess {
     }
 
     private boolean initSteganographyContainer() {
-        // Always use LSB1Bit algorithm
-        _h264SteganographyContainer = AlgorithmFactory.getSteganographyContainerInstanceFromName(H264_LSB1BIT_CONTAINER);
-        if (_h264SteganographyContainer == null) {
-            _lastError = "Unable to load H264 LSB1Bit steganography algorithm";
+        // Use AAC LSB1Bit algorithm for audio steganography
+        _aacSteganographyContainer = AlgorithmFactory.getSteganographyContainerInstanceFromName(AAC_LSB1BIT_CONTAINER);
+        if (_aacSteganographyContainer == null) {
+            _lastError = "Unable to load AAC LSB1Bit steganography algorithm";
             ErrorManager.getInstance().addErrorMessage(_lastError);
             return false;
         }
@@ -112,27 +115,40 @@ public class SimpleEncodeProcess {
             return false;
         }
 
-        _h264SteganographyContainer.setFileStreamDirectory(parameters.getDestinationVideoDirectory());
+        _aacSteganographyContainer.setFileStreamDirectory(parameters.getDestinationVideoDirectory());
 
-        if (!_h264SteganographyContainer.loadData(_mp4MediaReader)) {
-            _lastError = "Unable to load video channel from original MP4";
+        if (!_aacSteganographyContainer.loadData(_mp4MediaReader)) {
+            _lastError = "Unable to load audio channel from original MP4";
             ErrorManager.getInstance().addErrorMessage(_lastError);
             return false;
         }
         return true;
     }
 
-    private boolean checkEnoughSpaceInVideo() {
-        if (_h264SteganographyContainer == null || _bytesToHide == null) {
+    /**
+     * Check if the video has an audio track - required for AAC steganography
+     */
+    private boolean checkAudioTrackExists() {
+        if (_mp4MediaReader.getAudioSampleList() == null || _mp4MediaReader.getAudioSampleList().size() == 0) {
+            _lastError = "Video has no audio track. Steganography requires a video with audio.";
+            ErrorManager.getInstance().addErrorMessage(_lastError);
+            Log.e(TAG, _lastError);
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkEnoughSpaceInAudio() {
+        if (_aacSteganographyContainer == null || _bytesToHide == null) {
             _lastError = "Steganography container or content not initialized";
             return false;
         }
 
-        long videoSteganographyLength = _h264SteganographyContainer.getMaxContentToHide();
+        long audioSteganographyLength = _aacSteganographyContainer.getMaxContentToHide();
         int dataLength = _bytesToHide.length;
 
-        if (videoSteganographyLength < dataLength) {
-            _lastError = "Not enough space in video to hide data. Maximum: " + videoSteganographyLength + " bytes, Required: " + dataLength + " bytes";
+        if (audioSteganographyLength < dataLength) {
+            _lastError = "Not enough space in audio to hide data. Maximum: " + audioSteganographyLength + " bytes, Required: " + dataLength + " bytes";
             ErrorManager.getInstance().addErrorMessage(_lastError);
             Log.e(TAG, _lastError);
             return false;
@@ -143,51 +159,45 @@ public class SimpleEncodeProcess {
     private void finalise(VideoEncodeParams parameters) {
         Utils.printTime("Start saving file: ");
         MP4MediaWriter mp4MediaWriter;
-        DataSource h264DataSource;
-        Track audioTrack;
+        DataSource aacDataSource;
+        Track videoTrack;
         String outputVideoName;
 
-        if (_h264SteganographyContainer != null) {
-            _h264SteganographyContainer.writeRemainingSamples();
+        if (_aacSteganographyContainer != null) {
+            _aacSteganographyContainer.writeRemainingSamples();
         }
 
         outputVideoName = "HushTalk_" + Utils.getCurrentDateAndTime() + ".mp4";
         parameters.setOutputFileName(outputVideoName);
 
-        h264DataSource = _h264SteganographyContainer.getDataSource();
-        // Get original audio track if it exists (preserve it without modification)
-        audioTrack = _mp4MediaReader.getAudioTrack();
+        // Get modified AAC audio data source (with hidden data)
+        aacDataSource = _aacSteganographyContainer.getDataSource();
+        // Get original video track (preserved without modification)
+        videoTrack = _mp4MediaReader.getVideoTrack();
 
-        if (audioTrack != null) {
-            // Use constructor that accepts Track object for audio preservation
+        if (videoTrack != null) {
+            // Use constructor that merges preserved video + modified audio
             mp4MediaWriter = new MP4MediaWriter(
                 parameters.getDestinationVideoDirectory() + outputVideoName,
-                _mp4MediaReader.getTimescale(),
-                (int) _mp4MediaReader.getDurationPerSample(),
-                h264DataSource,
-                audioTrack
+                videoTrack,
+                aacDataSource
             );
         } else {
-            // No audio track, use constructor with null DataSource
+            // No video track found - this shouldn't happen for valid video files
+            Log.w(TAG, "No video track found, creating audio-only file");
             mp4MediaWriter = new MP4MediaWriter(
                 parameters.getDestinationVideoDirectory() + outputVideoName,
-                _mp4MediaReader.getTimescale(),
-                (int) _mp4MediaReader.getDurationPerSample(),
-                h264DataSource,
-                (DataSource) null
+                (Track) null,
+                aacDataSource
             );
         }
         mp4MediaWriter.create();
         mp4MediaWriter.cleanUpResources();
 
-        _h264SteganographyContainer.cleanUpResources();
+        _aacSteganographyContainer.cleanUpResources();
         Utils.printTime("End saving file: ");
     }
 }
-
-
-
-
 
 
 

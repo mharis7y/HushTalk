@@ -190,7 +190,7 @@ export default function HomeScreen() {
 
             {recentVaultItems.length > 0 ? (
               recentVaultItems.map((item) => (
-                <View key={item.id} className="bg-black-100 rounded-2xl p-4 mb-3">
+                <Pressable key={item.id} onPress={() => router.push('/vault')} className="bg-black-100 rounded-2xl p-4 mb-3">
                   <Text className="text-white text-lg font-poppins_semibold">
                     {item.title}
                   </Text>
@@ -200,7 +200,7 @@ export default function HomeScreen() {
                   <Text className="text-white/40 text-xs mt-2">
                     {item.createdAt}
                   </Text>
-                </View>
+                </Pressable>
               ))
             ) : (
               <Text className="text-white/50 text-center py-4 font-poppins">

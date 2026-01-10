@@ -320,4 +320,29 @@ public class MP4MediaReader {
         return null;
 	}
 	
+	public Track getVideoTrack() {
+		Movie movie;
+		List<TrackBox> trackBoxes;
+		
+		if (_isoFile == null) {
+			return null;
+		}
+		
+		movie = new Movie();
+		trackBoxes = _isoFile.getMovieBox().getBoxes(TrackBox.class);
+		if (trackBoxes == null) {
+			return null;
+		}
+        for (TrackBox trackBox : trackBoxes) {
+            movie.addTrack(new Mp4TrackImpl(trackBox));
+        }
+        // Find video track (handler type "vide")
+        for (Track track : movie.getTracks()) {
+            if (VIDEO_MP4_HANDLER.equals(track.getHandler())) {
+                return track;
+            }
+        }
+        return null;
+	}
+	
 }

@@ -56,10 +56,10 @@ export default function HideVideoScreen() {
         secret,
         password: password.trim() || undefined
       });
-      setStatus('Message hidden successfully! Steganofied video saved.');
+      setStatus('Message hidden successfully! Secret video saved.');
       Alert.alert(
         'Success',
-        'Message hidden successfully! The steganofied video has been saved to your HushTalk folder.',
+        'Message hidden successfully! The Secret video has been saved to your HushTalk folder.',
       );
       // Reset form
       setSelectedVideo(null);
@@ -96,7 +96,7 @@ export default function HideVideoScreen() {
           </Text>
         </View>
         <Text className="text-white/70 mb-6 font-poppins">
-          Embed covert text into videos locally before syncing to Firebase Vault.
+          Hide your Secret message in the image and save it your Gallery.
         </Text>
 
         <View className="gap-5">

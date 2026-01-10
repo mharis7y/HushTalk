@@ -75,7 +75,7 @@ export default function ExtractVideoScreen() {
           </Text>
         </View>
         <Text className="text-white/70 mb-6 font-poppins">
-          Reveal hidden payloads from videos directly on-device.
+          Reveal hidden Text from videos directly on-device.
         </Text>
 
         <View className="gap-5">
@@ -111,7 +111,7 @@ export default function ExtractVideoScreen() {
           {decoded ? (
             <View className="bg-black-200 rounded-2xl p-4">
               <Text className="text-white/60 text-sm mb-2 font-poppins_medium">
-                Decoded Payload
+                Decoded Text
               </Text>
               <Text className="text-white text-base font-poppins">
                 {decoded}

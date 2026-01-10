@@ -59,7 +59,7 @@ export default function HideImageScreen() {
       setStatus('Message hidden successfully! Secret image saved to gallery.');
       Alert.alert(
         'Success',
-        'Message hidden successfully! The steganofied image has been saved to your HushTalk album in the gallery.',
+        'Message hidden successfully! The Secret image has been saved to your HushTalk album in the gallery and the vault.',
       );
       // Reset form
       setSelectedImage(null);
@@ -96,7 +96,7 @@ export default function HideImageScreen() {
           </Text>
         </View>
         <Text className="text-white/70 mb-6 font-poppins">
-          Embed covert text into images locally before syncing to Firebase Vault.
+          Hide your Secret message in the image and save it your Gallery and backup it to HushTalk Vault.
         </Text>
 
         <View className="gap-5">

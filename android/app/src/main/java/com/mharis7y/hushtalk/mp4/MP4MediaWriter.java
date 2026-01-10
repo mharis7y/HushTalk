@@ -20,11 +20,13 @@ public class MP4MediaWriter {
 	private H264TrackImpl _h264TrackImpl;
 	private AACTrackImpl _aacTrackImpl;
 	private Track _audioTrack;
+	private Track _videoTrack;
 	private String _outputPath;
 	
 	public MP4MediaWriter(String outputPath, DataSource h264, DataSource aac) {
 		_h264TrackImpl = null;
 		_aacTrackImpl = null;
+		_videoTrack = null;
 
 		_outputPath = outputPath;
 		try {
@@ -43,6 +45,7 @@ public class MP4MediaWriter {
 		_h264TrackImpl = null;
 		_aacTrackImpl = null;
 		_audioTrack = null;
+		_videoTrack = null;
 
 		_outputPath = outputPath;
 		try {
@@ -61,11 +64,34 @@ public class MP4MediaWriter {
 		_h264TrackImpl = null;
 		_aacTrackImpl = null;
 		_audioTrack = audioTrack;
+		_videoTrack = null;
 
 		_outputPath = outputPath;
 		try {
 			if (h264 != null && h264.size() > 0) {
 				_h264TrackImpl = new H264TrackImpl(h264, DEFAULT_LANGUAGE, timescale, frametick);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Constructor for AAC steganography: preserves original video track, uses modified AAC audio
+	 * @param outputPath Path to write the output MP4 file
+	 * @param videoTrack Original video track to preserve (unmodified)
+	 * @param aac Modified AAC audio DataSource with hidden data
+	 */
+	public MP4MediaWriter(String outputPath, Track videoTrack, DataSource aac) {
+		_h264TrackImpl = null;
+		_aacTrackImpl = null;
+		_audioTrack = null;
+		_videoTrack = videoTrack;
+
+		_outputPath = outputPath;
+		try {
+			if (aac != null && aac.size() > 0) {
+				_aacTrackImpl = new AACTrackImpl(aac);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -79,6 +105,9 @@ public class MP4MediaWriter {
 		
 		if (_h264TrackImpl != null) {
 			movie.addTrack(_h264TrackImpl);
+		}
+		if (_videoTrack != null) {
+			movie.addTrack(_videoTrack);
 		}
         if (_aacTrackImpl != null) {
         	movie.addTrack(_aacTrackImpl);
@@ -103,6 +132,7 @@ public class MP4MediaWriter {
         _h264TrackImpl = null;
         _aacTrackImpl = null;
         _audioTrack = null;
+        _videoTrack = null;
         System.gc();
 	}
 	
