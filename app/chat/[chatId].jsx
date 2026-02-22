@@ -5,9 +5,8 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import { Send } from 'lucide-react-native';
 import MessageList from '../../components/MessageList';
 import { db } from '../../lib/firebase';
-import { collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, doc, getDoc, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, doc, getDoc, getDocs, writeBatch } from 'firebase/firestore';
 import { useGlobalContext } from '../../context/GlobalProvider';
-
 
 export default function ChatDetailScreen() {
   const { chatId } = useLocalSearchParams();
@@ -46,13 +45,34 @@ export default function ChatDetailScreen() {
     // Listen to messages in realtime
     const messagesRef = collection(db, 'chats', chatId, 'messages');
     const q = query(messagesRef, orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
       const messagesList = [];
-      snapshot.forEach((doc) => {
-        messagesList.push({ id: doc.id, ...doc.data() });
+      const batch = writeBatch(db);
+      let batchCount = 0;
+
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        messagesList.push({ id: docSnap.id, ...data });
+
+        // Mark message as seen if not authored by me and not already seen
+        if (data.authorId !== user.uid && !data.seen) {
+          batch.update(docSnap.ref, {
+            seen: true,
+            seenAt: new Date().toISOString()
+          });
+          batchCount++;
+        }
       });
       setMessages(messagesList);
       setLoading(false);
+
+      if (batchCount > 0) {
+        try {
+          await batch.commit();
+        } catch (error) {
+          console.error('Error committing batch for seen status:', error);
+        }
+      }
     });
 
     // Mark messages as read when viewing chat
@@ -88,6 +108,9 @@ export default function ChatDetailScreen() {
         text: composer.trim(),
         authorId: user.uid,
         createdAt: new Date().toISOString(),
+        delivered: true,
+        seen: false,
+        seenAt: null
       });
 
       // Update chat's last message and increment unread for other user
@@ -98,7 +121,7 @@ export default function ChatDetailScreen() {
         const otherUserId = chatData.participants.find((id) => id !== user.uid);
         const unreadCounts = chatData.unreadCounts || {};
         unreadCounts[otherUserId] = (unreadCounts[otherUserId] || 0) + 1;
-        
+
         await updateDoc(chatRef, {
           lastMessage: composer.trim(),
           lastMessageTime: new Date().toISOString(),
@@ -139,11 +162,10 @@ export default function ChatDetailScreen() {
             multiline
             className="flex-1 min-h-[48px] max-h-[120px] bg-black-100 rounded-2xl px-6 py-3 text-white font-poppins"
           />
-          <Send onPress={handleSend} color={'#FF9C01'}/>
+          <Send onPress={handleSend} color={'#FF9C01'} />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
-
 

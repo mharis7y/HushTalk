@@ -75,9 +75,22 @@ export default function VaultScreen() {
     fetchVaultItems();
   }, [user]);
 
-  const openDialog = (mode) => setDialog(mode);
+  const openDialog = (mode) => {
+    setDialog(mode);
+  };
 
   const handleSelection = (medium) => {
+    if (medium === "video" && user.isPremium !== 1) {
+      setDialog(null);
+      Toast.show({
+        type: 'info',
+        text1: 'Premium Access Required',
+        text2: 'Upgrade to Premium in Profile to hide or extract videos.',
+        position: 'bottom',
+      });
+      return;
+    }
+
     setDialog(null);
     const basePath = dialog === "hide" ? "hide" : "extract";
     const mediaType = medium === "image" ? "image" : "video";

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth, db } from "../lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, query, where, getDocs, onSnapshot } from "firebase/firestore";
+import { collection, query, where, getDocs, onSnapshot, doc, getDoc } from "firebase/firestore";
 
 const GlobalContext = createContext();
 export const useGlobalContext = () => useContext(GlobalContext);
@@ -14,12 +14,25 @@ const GlobalProvider = ({ children }) => {
   const [preloadedUsers, setPreloadedUsers] = useState([]);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => {
-      if (user) {
+    const unsub = onAuthStateChanged(auth, async (authUser) => {
+      if (authUser) {
         setIsLogged(true);
-        setUser(user);
+
+        try {
+          const userDocRef = doc(db, 'users', authUser.uid);
+          const userDocSnap = await getDoc(userDocRef);
+          if (userDocSnap.exists()) {
+            setUser({ ...authUser, ...userDocSnap.data() });
+          } else {
+            setUser(authUser);
+          }
+        } catch (error) {
+          console.error("Error fetching user firestore data:", error);
+          setUser(authUser);
+        }
+
         // Preload chats and users in background
-        preloadData(user.uid);
+        preloadData(authUser.uid);
       } else {
         setIsLogged(false);
         setUser(null);
