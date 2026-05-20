@@ -53,9 +53,7 @@ export default function VaultScreen() {
         title: doc.fileName,
         fileType: doc.type,
         createdAt: new Date(doc.$createdAt).toLocaleDateString(),
-        // Use /download endpoint (not /view) to get the raw unmodified file
         downloadUrl: `https://sgp.cloud.appwrite.io/v1/storage/buckets/${APPWRITE_CONFIG.bucketId}/files/${doc.fileId}/download?project=${APPWRITE_CONFIG.projectId}`,
-        fileId: doc.fileId
       }));
 
       setVaultItems(items);

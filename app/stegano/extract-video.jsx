@@ -103,7 +103,7 @@ export default function ExtractVideoScreen() {
 
 
           <AppButton
-            title="Decode Message"
+            title={loading ? 'Decoding...' : 'Decode Message'}
             onPress={handleDecode}
             disabled={loading}
           />

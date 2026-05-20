@@ -1,12 +1,19 @@
 import { useState } from 'react';
 import { KeyboardAvoidingView, ScrollView, Text, View, Alert, Pressable, Modal } from 'react-native';
-import { User, Lock, LogOut, ChevronRight, Star, Mail, Info, FileText, Shield, HelpCircle } from 'lucide-react-native';
+import { User, Lock, LogOut, ChevronRight, Star, Info, FileText, Shield, HelpCircle, Trash2 } from 'lucide-react-native';
 import AppInput from '../../components/AppInput';
 import AppButton from '../../components/AppButton';
 import { router } from 'expo-router';
-import { signOut, auth, db } from '../../lib/firebase';
-import { updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
-import { doc, updateDoc } from 'firebase/firestore';
+import { signOut, deleteAccount } from '../../lib/firebase';
+import { getApp } from '@react-native-firebase/app';
+import {
+  getAuth,
+  updateProfile,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+} from '@react-native-firebase/auth';
+import { getFirestore, doc, updateDoc } from '@react-native-firebase/firestore';
 import { useGlobalContext } from '../../context/GlobalProvider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
@@ -18,6 +25,7 @@ export default function ProfileScreen() {
   // Modals state
   const [isUsernameModalVisible, setUsernameModalVisible] = useState(false);
   const [isPasswordModalVisible, setPasswordModalVisible] = useState(false);
+  const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
   const [infoModal, setInfoModal] = useState({ visible: false, title: '', content: '' });
 
   // Form states
@@ -26,6 +34,7 @@ export default function ProfileScreen() {
     current: '',
     newPass: '',
   });
+  const [deletePassword, setDeletePassword] = useState('');
 
   const handleUpdateUsername = async () => {
     if (!username.trim() || !user) return;
@@ -36,14 +45,15 @@ export default function ProfileScreen() {
 
     try {
       setLoading(true);
-      if (auth.currentUser) {
-        await updateProfile(auth.currentUser, {
-          displayName: username.trim(),
-        });
+      const auth = getAuth(getApp());
+      const db = getFirestore(getApp());
+      const currentUser = auth.currentUser;
+
+      if (currentUser) {
+        await updateProfile(currentUser, { displayName: username.trim() });
       }
 
-      const userDocRef = doc(db, 'users', user.uid);
-      await updateDoc(userDocRef, {
+      await updateDoc(doc(db, 'users', user.uid), {
         username: username.trim(),
       });
 
@@ -53,7 +63,7 @@ export default function ProfileScreen() {
         type: 'success',
         text1: 'Success',
         text2: 'Username updated successfully!',
-        position: 'bottom'
+        position: 'bottom',
       });
       setUsernameModalVisible(false);
     } catch (error) {
@@ -72,15 +82,13 @@ export default function ProfileScreen() {
 
     try {
       setLoading(true);
+      const auth = getAuth(getApp());
       const currentUser = auth.currentUser;
       if (!currentUser || !currentUser.email) {
         throw new Error('User not authenticated');
       }
 
-      const credential = EmailAuthProvider.credential(
-        currentUser.email,
-        passwords.current
-      );
+      const credential = EmailAuthProvider.credential(currentUser.email, passwords.current);
       await reauthenticateWithCredential(currentUser, credential);
       await updatePassword(currentUser, passwords.newPass);
 
@@ -89,7 +97,7 @@ export default function ProfileScreen() {
         type: 'success',
         text1: 'Success',
         text2: 'Password updated successfully!',
-        position: 'bottom'
+        position: 'bottom',
       });
       setPasswordModalVisible(false);
     } catch (error) {
@@ -107,24 +115,54 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!deletePassword) return;
+    Alert.alert(
+      'Delete account?',
+      'This permanently removes your account, profile, and chat history. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              const result = await deleteAccount(deletePassword);
+              if (result.success) {
+                setDeletePassword('');
+                setDeleteModalVisible(false);
+                router.replace('/login');
+              } else {
+                Alert.alert('Error', result.msg);
+              }
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const handleSignOut = async () => {
     Alert.alert(
-      "Sign Out",
-      "Are you sure you want to sign out?",
+      'Sign Out',
+      'Are you sure you want to sign out?',
       [
-        { text: "Cancel", style: "cancel" },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: "Sign Out",
-          style: "destructive",
+          text: 'Sign Out',
+          style: 'destructive',
           onPress: async () => {
             const result = await signOut();
             if (result.success) {
-              router.replace("/login");
+              router.replace('/login');
             } else {
-              Alert.alert("Error", result.msg || "Failed to sign out");
+              Alert.alert('Error', result.msg || 'Failed to sign out');
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
@@ -159,7 +197,7 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Menu List */}
+        {/* Account Settings */}
         <View className="bg-black-100 border border-white/10 rounded-3xl p-5 mb-8">
           <Text className="text-white text-lg font-poppins_semibold mb-4">Account</Text>
 
@@ -199,6 +237,7 @@ export default function ProfileScreen() {
           )}
         </View>
 
+        {/* App Information */}
         <View className="bg-black-100 border border-white/10 rounded-3xl p-5 mb-8">
           <Text className="text-white text-lg font-poppins_semibold mb-4">App Information</Text>
 
@@ -206,7 +245,7 @@ export default function ProfileScreen() {
             onPress={() => setInfoModal({
               visible: true,
               title: 'Privacy Policy',
-              content: 'Your privacy is paramount. HushTalk encrypts conversations securely. We do not store deciphered keys on our servers. Steganography is performed locally on your device ensuring full privacy.'
+              content: 'HushTalk collects your email, username, and phone number for account creation via Firebase Authentication. Chat messages are stored in Firebase Firestore. Media you upload (images/videos) is stored in Appwrite Storage. Steganography encoding and decoding happen locally on your device — the hidden message is never sent in plaintext to our servers. You may delete your account and all associated data at any time from this Profile screen.',
             })}
             className="flex-row items-center justify-between border border-white/10 rounded-2xl p-4 mb-3 active:bg-white/5"
           >
@@ -221,7 +260,7 @@ export default function ProfileScreen() {
             onPress={() => setInfoModal({
               visible: true,
               title: 'Terms of Service',
-              content: 'By using HushTalk, you agree to not use the app for illegal activities. We reserve the right to ban users participating in malicious operations. The complete Terms and Conditions are bound by Local Law.'
+              content: 'By using HushTalk, you agree to not use the app for illegal activities. We reserve the right to ban users participating in malicious operations. The complete Terms and Conditions are bound by Local Law.',
             })}
             className="flex-row items-center justify-between border border-white/10 rounded-2xl p-4 mb-3 active:bg-white/5"
           >
@@ -236,7 +275,7 @@ export default function ProfileScreen() {
             onPress={() => setInfoModal({
               visible: true,
               title: 'Contact Support',
-              content: 'For support or inquiries, please email us directly at: \n\nsupport@hushtalk.com\n\nOur team aims to respond within 24-48 business hours.'
+              content: 'For support or inquiries, please email us directly at: \n\nmharis7y@gmail.com\n\nOur team aims to respond within 24-48 business hours.',
             })}
             className="flex-row items-center justify-between border border-white/10 rounded-2xl p-4 mb-3 active:bg-white/5"
           >
@@ -251,7 +290,7 @@ export default function ProfileScreen() {
             onPress={() => setInfoModal({
               visible: true,
               title: 'About HushTalk',
-              content: 'HushTalk Version 1.0.0\n\nA stealth communication tool designed to keep your media secure explicitly using localized steganography algorithms. Developed by Mharis7y.'
+              content: 'HushTalk Version 1.0.1\n\nA stealth communication tool designed to keep your media secure explicitly using localized steganography algorithms. Developed by Mharis7y.',
             })}
             className="flex-row items-center justify-between border border-white/10 rounded-2xl p-4 mb-3 active:bg-white/5"
           >
@@ -264,13 +303,20 @@ export default function ProfileScreen() {
         </View>
 
         <View className="mb-10 mx-6">
-
           <Pressable
             onPress={handleSignOut}
             className="flex-row items-center justify-center bg-[#E53935] rounded-2xl p-4 mt-2 active:opacity-80 gap-2"
           >
             <LogOut size={20} color="#FFFFFF" />
             <Text className="text-white text-base font-poppins_bold">Sign Out</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => setDeleteModalVisible(true)}
+            className="flex-row items-center justify-center border border-[#E53935] rounded-2xl p-4 mt-3 active:opacity-80 gap-2"
+          >
+            <Trash2 size={20} color="#E53935" />
+            <Text className="text-[#E53935] text-base font-poppins_bold">Delete Account</Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -332,6 +378,37 @@ export default function ProfileScreen() {
                 title="Update Password"
                 onPress={handleUpdatePassword}
                 disabled={loading || !passwords.current || !passwords.newPass || passwords.newPass.length < 6}
+              />
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Delete Account Modal */}
+      <Modal visible={isDeleteModalVisible} animationType="slide" transparent>
+        <KeyboardAvoidingView behavior="padding" className="flex-1 bg-black/80 items-center justify-end">
+          <View className="w-full bg-primary rounded-t-3xl p-6 min-h-[55%]">
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className="text-2xl text-white font-poppins_bold">Delete Account</Text>
+              <Pressable onPress={() => { setDeleteModalVisible(false); setDeletePassword(''); }}>
+                <Text className="text-white/60 font-poppins_bold text-lg">Cancel</Text>
+              </Pressable>
+            </View>
+            <Text className="text-white/70 font-poppins text-sm mb-4 leading-5">
+              This permanently deletes your account, profile, and chat history from HushTalk. This action cannot be undone. Enter your password to confirm.
+            </Text>
+            <AppInput
+              label="Current Password"
+              placeholder="••••••••"
+              secureTextEntry
+              value={deletePassword}
+              onChangeText={setDeletePassword}
+            />
+            <View className="mt-6">
+              <AppButton
+                title="Permanently Delete Account"
+                onPress={handleDeleteAccount}
+                disabled={loading || !deletePassword}
               />
             </View>
           </View>

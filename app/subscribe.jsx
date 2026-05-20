@@ -19,7 +19,7 @@ export default function SubscribeScreen() {
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
+            allowsEditing: false,
             quality: 0.8,
         });
 
@@ -116,15 +116,15 @@ export default function SubscribeScreen() {
                     </Text>
                     <View className="mb-3">
                         <Text className="text-white/60 text-sm font-poppins">Account Title</Text>
-                        <Text className="text-white text-base font-poppins_medium">HushTalk Official</Text>
+                        <Text className="text-white text-base font-poppins_medium">Muhammad Haris</Text>
                     </View>
                     <View className="mb-3">
                         <Text className="text-white/60 text-sm font-poppins">Account Number</Text>
-                        <Text className="text-white text-base font-poppins_medium">1234 5678 9012 3456</Text>
+                        <Text className="text-white text-base font-poppins_medium">089120016042</Text>
                     </View>
                     <View>
                         <Text className="text-white/60 text-sm font-poppins">Bank Name</Text>
-                        <Text className="text-white text-base font-poppins_medium">Meezan Bank Ltd.</Text>
+                        <Text className="text-white text-base font-poppins_medium">Mashreq Bank</Text>
                     </View>
                 </View>
 

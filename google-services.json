@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "375488591914",
+    "project_id": "hushtalk-f58ba",
+    "storage_bucket": "hushtalk-f58ba.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:375488591914:android:b5558ba0ea233e9133ab53",
+        "android_client_info": {
+          "package_name": "com.novabyte.hushtalk"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFDPPqZXbpGe32Y0iERJinneAW2bnCSYA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
