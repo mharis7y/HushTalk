@@ -39,7 +39,7 @@ export default function ChatDetailScreen() {
     const fetchOtherUser = async () => {
       try {
         const chatDoc = await getDoc(doc(db, 'chats', chatId));
-        if (chatDoc.exists) {
+        if (chatDoc.exists()) {
           const chatData = chatDoc.data();
           const otherUserId = chatData.participants?.find((id) => id !== user.uid);
           if (otherUserId) {
@@ -109,7 +109,7 @@ export default function ChatDetailScreen() {
       try {
         const chatRef = doc(db, 'chats', chatId);
         const chatDoc = await getDoc(chatRef);
-        if (chatDoc.exists) {
+        if (chatDoc.exists()) {
           const chatData = chatDoc.data();
           const unreadCounts = chatData.unreadCounts || {};
           unreadCounts[user.uid] = 0;
@@ -154,7 +154,7 @@ export default function ChatDetailScreen() {
       // Update chat's lastMessage (also encrypted) and increment unread for the other participant
       const chatRef = doc(db, 'chats', chatId);
       const chatDoc = await getDoc(chatRef);
-      if (chatDoc.exists) {
+      if (chatDoc.exists()) {
         const chatData = chatDoc.data();
         const otherUserId = chatData.participants?.find((id) => id !== user.uid);
         const unreadCounts = chatData.unreadCounts || {};

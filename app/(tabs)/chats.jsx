@@ -180,7 +180,7 @@ export default function ChatsScreen() {
     const chatRef = doc(db, 'chats', chatId);
     const chatDoc = await getDoc(chatRef);
 
-    if (!chatDoc.exists) {
+    if (!chatDoc.exists()) {
       await setDoc(chatRef, {
         participants: [user.uid, otherUser.userId],
         createdAt: new Date().toISOString(),
@@ -197,7 +197,8 @@ export default function ChatsScreen() {
   const filteredChats = chats.filter((chat) => {
     const otherUserId = chat.participants?.find((id) => id !== user?.uid);
     const otherUser = chatUsers[otherUserId];
-    if (!otherUser) return false;
+    if (!searchQuery) return true; // show all chats when not searching
+    if (!otherUser) return false; // hide only when searching and user data is missing
     const usernameMatch = otherUser.username?.toLowerCase().includes(searchQuery.toLowerCase());
     const phoneMatch = otherUser.phoneNumber?.toLowerCase().includes(searchQuery.toLowerCase());
     return usernameMatch || phoneMatch;
